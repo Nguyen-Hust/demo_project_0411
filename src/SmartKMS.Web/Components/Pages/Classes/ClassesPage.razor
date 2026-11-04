@@ -1,0 +1,157 @@
+@page "/classes"
+@using SmartKMS.Application.Modules.Classes.Queries.GetClassDetail
+@inject ISender Sender
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageHeader Title="Lớp học" Subtitle="Quản lý danh sách lớp theo khối và năm học">
+    <Actions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateAsync" data-testid="class-create-button">
+            Tạo lớp
+        </MudButton>
+    </Actions>
+</PageHeader>
+
+<MudPaper Class="pa-4 mb-4" Elevation="0">
+    <div class="mb-4 d-flex gap-4 flex-wrap">
+        <MudSelect T="AgeGroup?" Label="Khối" Clearable="true" @bind-Value="_filterAgeGroup" data-testid="class-agegroup-filter" Style="min-width: 200px;">
+            <MudSelectItem T="AgeGroup?" Value="AgeGroup.Mam">Mầm</MudSelectItem>
+            <MudSelectItem T="AgeGroup?" Value="AgeGroup.Choi">Chồi</MudSelectItem>
+            <MudSelectItem T="AgeGroup?" Value="AgeGroup.La">Lá</MudSelectItem>
+        </MudSelect>
+        <MudTextField @bind-Value="_filterYear" Label="Năm học" Placeholder="2025-2026" data-testid="class-year-filter" Style="min-width: 200px;" />
+        <MudSelect T="ClassStatus?" Label="Trạng thái" Clearable="true" @bind-Value="_filterStatus" data-testid="class-status-filter" Style="min-width: 200px;">
+            <MudSelectItem T="ClassStatus?" Value="ClassStatus.Active">Đang hoạt động</MudSelectItem>
+            <MudSelectItem T="ClassStatus?" Value="ClassStatus.Closed">Đã đóng</MudSelectItem>
+        </MudSelect>
+    </div>
+
+    <MudDataGrid T="ClassSummaryDto" Items="_classes" Loading="_loading" Filterable="false" Dense="true" data-testid="data-table">
+        <ToolBarContent>
+            <MudText Typo="Typo.body2" Color="Color.Default">Tổng: @_classes.Count lớp</MudText>
+        </ToolBarContent>
+        <Columns>
+            <PropertyColumn Property="x => x.Name" Title="Tên lớp" />
+            <PropertyColumn Property="x => x.AgeGroup" Title="Khối" />
+            <PropertyColumn Property="x => x.AcademicYear" Title="Năm học" />
+            <TemplateColumn Title="Sĩ số">
+                <CellTemplate>
+                    <MudText Typo="Typo.body2">@context.Item.StudentCount/@context.Item.MaxStudents</MudText>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn Title="Trạng thái">
+                <CellTemplate>
+                    @if (context.Item.Status == nameof(ClassStatus.Closed))
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error">Đã đóng</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success">Hoạt động</MudChip>
+                    }
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn Title="Hành động">
+                <CellTemplate>
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="@(() => OpenDetail(context.Item.Id))" aria-label="Xem chi tiết" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditAsync(context.Item))" aria-label="Sửa" />
+                    @if (context.Item.Status != nameof(ClassStatus.Closed))
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => CloseAsync(context.Item))" aria-label="Đóng lớp" data-testid="class-close-button" />
+                    }
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+        <NoRecordsContent>
+            <EmptyState Message="Chưa có lớp học nào" />
+        </NoRecordsContent>
+    </MudDataGrid>
+</MudPaper>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private bool _loading;
+    private IReadOnlyList<ClassSummaryDto> _classes = [];
+    private AgeGroup? _filterAgeGroup;
+    private string? _filterYear;
+    private ClassStatus? _filterStatus;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        var result = await Sender.Send(new ListClassesQuery(_filterAgeGroup, _filterYear, _filterStatus));
+        _classes = result.IsSuccess ? result.Value : [];
+        _loading = false;
+    }
+
+    private async Task OpenCreateAsync()
+    {
+        var dialog = await DialogService.ShowAsync<ClassFormDialog>("Tạo lớp học");
+        var res = await dialog.Result;
+        if (res is null || res.Canceled || res.Data is not ClassFormResult form)
+            return;
+
+        var cmd = new CreateClassCommand(form.Name, form.AgeGroup, form.AcademicYear, form.Room);
+        var outcome = await Sender.Send(cmd);
+        if (outcome.IsFailure)
+        {
+            Snackbar.Add(outcome.Errors[0].Description, Severity.Error);
+            return;
+        }
+        Snackbar.Add("Đã tạo lớp học", Severity.Success);
+        await LoadAsync();
+    }
+
+    private async Task OpenEditAsync(ClassSummaryDto item)
+    {
+        var detail = await Sender.Send(new GetClassDetailQuery(item.Id));
+        if (detail.IsFailure)
+        {
+            Snackbar.Add(detail.Errors[0].Description, Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters<ClassFormDialog> { { x => x.Data, detail.Value } };
+        var dialog = await DialogService.ShowAsync<ClassFormDialog>("Sửa lớp học", parameters);
+        var res = await dialog.Result;
+        if (res is null || res.Canceled || res.Data is not ClassFormResult form)
+            return;
+
+        var outcome = await Sender.Send(new UpdateClassCommand(item.Id, form.Name, form.Room));
+        if (outcome.IsFailure)
+        {
+            Snackbar.Add(outcome.Errors[0].Description, Severity.Error);
+            return;
+        }
+        Snackbar.Add("Đã cập nhật lớp học", Severity.Success);
+        await LoadAsync();
+    }
+
+    private async Task CloseAsync(ClassSummaryDto item)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { nameof(ConfirmDialog.Title), "Đóng lớp" },
+            { nameof(ConfirmDialog.ContentText), $"Bạn có chắc muốn đóng lớp \"{item.Name}\"? Lớp vẫn hiển thị khi lọc \"đã đóng\"." },
+            { nameof(ConfirmDialog.ConfirmText), "Đóng lớp" }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Đóng lớp", parameters);
+        var res = await dialog.Result;
+        if (res is null || res.Canceled)
+            return;
+
+        var outcome = await Sender.Send(new CloseClassCommand(item.Id));
+        if (outcome.IsFailure)
+        {
+            Snackbar.Add(outcome.Errors[0].Description, Severity.Error);
+            return;
+        }
+        Snackbar.Add("Đã đóng lớp", Severity.Success);
+        await LoadAsync();
+    }
+
+    private void OpenDetail(Guid id) => Navigation.NavigateTo($"/classes/{id}");
+}

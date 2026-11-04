@@ -1,0 +1,68 @@
+@page "/classes/{Id:guid}"
+@using SmartKMS.Application.Modules.Classes.Queries.GetClassDetail
+@inject ISender Sender
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+}
+else if (_detail is null)
+{
+    <EmptyState Icon="@Icons.Material.Filled.Warning" Message="Không tìm thấy lớp học" />
+}
+else
+{
+    <PageHeader Title="@_detail.Name" Subtitle="@($"Khối {_detail.AgeGroup} · Năm học {_detail.AcademicYear}")">
+        <Actions>
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack" data-testid="class-back-button">Quay lại</MudButton>
+        </Actions>
+    </PageHeader>
+
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Elevation="0">
+                <MudText Typo="Typo.h6">Thông tin lớp</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Default">Phòng: @(_detail.Room ?? "—")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Default">Trạng thái: @(_detail.Status == nameof(ClassStatus.Closed) ? "Đã đóng" : "Hoạt động")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Default">Sĩ số: @_detail.StudentCount/@_detail.MaxStudents</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Primary" data-testid="class-vacant-slots">Chỗ trống: @_detail.VacantSlots</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Elevation="0">
+                <MudText Typo="Typo.h6">Giáo viên</MudText>
+                @if (_detail.Teachers.Count == 0)
+                {
+                    <EmptyState Icon="@Icons.Material.Filled.Groups" Message="Chưa có giáo viên" />
+                }
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Elevation="0">
+                <MudText Typo="Typo.h6">Học sinh</MudText>
+                @if (_detail.Children.Count == 0)
+                {
+                    <EmptyState Icon="@Icons.Material.Filled.ChildCare" Message="Chưa có học sinh" />
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private bool _loading = true;
+    private ClassDetailDto? _detail;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Sender.Send(new GetClassDetailQuery(Id));
+        _detail = result.IsSuccess ? result.Value : null;
+        _loading = false;
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/classes");
+}

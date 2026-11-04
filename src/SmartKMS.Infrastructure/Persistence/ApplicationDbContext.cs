@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SmartKMS.Application.Common.Interfaces;
+using SmartKMS.Domain.Modules.Classes;
 using SmartKMS.Infrastructure.Identity;
 
 namespace SmartKMS.Infrastructure.Persistence;
@@ -14,6 +15,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options), IApplicationDbContext
 {
     // DbSet cho từng module (Children, Staff, Attendance, Nutrition...) thêm ở wave có entity đầu tiên.
+    public DbSet<Class> Classes => Set<Class>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

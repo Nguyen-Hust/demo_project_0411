@@ -1,0 +1,2701 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Studio V3 — Team Scrum & DDD Board</title>
+  <style id="board-ui-css">
+/* AI Studio Board — design tokens + components.
+ * Style: flat, dense dashboard (no gradients, borders over shadows). System fonts only (works offline / file://).
+ * Theming: [data-theme="light|dark"] forces a mode; no attribute → follows prefers-color-scheme.
+ */
+
+/* ───────────── tokens ───────────── */
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --hover: #eef2f7;
+  --border: #dde3ec;
+  --border-strong: #c4cdda;
+
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #566377;
+
+  --primary: #2563eb;
+  --primary-btn: #2563eb;
+  --primary-btn-hover: #1d4ed8;
+  --primary-soft: #e0e9ff;
+  --primary-text: #1d4ed8;
+  --on-primary: #ffffff;
+
+  --ok: #059669;
+  --ok-soft: #d9f5e8;
+  --ok-text: #047857;
+  --warn: #d97706;
+  --warn-soft: #fdf0d0;
+  --warn-text: #b45309;
+  --danger: #dc2626;
+  --danger-soft: #fde4e4;
+  --danger-text: #b91c1c;
+  --info: #7c3aed;
+  --info-soft: #ece6fd;
+  --info-text: #6d28d9;
+  --neutral: #64748b;
+  --neutral-soft: #e8edf3;
+  --neutral-text: #475569;
+
+  --scrim: rgba(15, 23, 42, 0.45);
+  --shadow-pop: 0 12px 32px rgba(15, 23, 42, 0.18);
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --r-sm: 6px;
+  --r: 10px;
+  --icon: 16px;
+  --control-h: 32px;
+  --topbar-h: 52px;
+  --col-w: 280px;
+  --ease: 140ms ease-out;
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1020;
+    --surface: #121a2b;
+    --surface-2: #182236;
+    --hover: #1f2b42;
+    --border: #263349;
+    --border-strong: #3a4a66;
+    --text: #f1f5f9;
+    --text-2: #a8b5c9;
+    --text-3: #8c9bb2;
+    --primary: #60a5fa;
+    --primary-btn-hover: #1d4ed8;
+    --primary-soft: rgba(96, 165, 250, 0.16);
+    --primary-text: #93c5fd;
+    --ok: #34d399;
+    --ok-soft: rgba(52, 211, 153, 0.15);
+    --ok-text: #34d399;
+    --warn: #fbbf24;
+    --warn-soft: rgba(251, 191, 36, 0.15);
+    --warn-text: #fbbf24;
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.16);
+    --danger-text: #fca5a5;
+    --info: #a78bfa;
+    --info-soft: rgba(167, 139, 250, 0.16);
+    --info-text: #c4b5fd;
+    --neutral: #94a3b8;
+    --neutral-soft: rgba(148, 163, 184, 0.16);
+    --neutral-text: #b4c0d2;
+    --scrim: rgba(2, 6, 16, 0.65);
+    --shadow-pop: 0 12px 36px rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b1020;
+  --surface: #121a2b;
+  --surface-2: #182236;
+  --hover: #1f2b42;
+  --border: #263349;
+  --border-strong: #3a4a66;
+  --text: #f1f5f9;
+  --text-2: #a8b5c9;
+  --text-3: #8c9bb2;
+  --primary: #60a5fa;
+  --primary-btn-hover: #1d4ed8;
+  --primary-soft: rgba(96, 165, 250, 0.16);
+  --primary-text: #93c5fd;
+  --ok: #34d399;
+  --ok-soft: rgba(52, 211, 153, 0.15);
+  --ok-text: #34d399;
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.15);
+  --warn-text: #fbbf24;
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.16);
+  --danger-text: #fca5a5;
+  --info: #a78bfa;
+  --info-soft: rgba(167, 139, 250, 0.16);
+  --info-text: #c4b5fd;
+  --neutral: #94a3b8;
+  --neutral-soft: rgba(148, 163, 184, 0.16);
+  --neutral-text: #b4c0d2;
+  --scrim: rgba(2, 6, 16, 0.65);
+  --shadow-pop: 0 12px 36px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+/* ───────────── base ───────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 var(--font);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h2 {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--mono);
+}
+
+code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--neutral-soft);
+  color: var(--text);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+[inert] {
+  pointer-events: none;
+}
+
+#board-app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.ico {
+  width: var(--icon);
+  height: var(--icon);
+  flex: none;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.muted {
+  color: var(--text-3);
+}
+
+.small {
+  font-size: 12px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-wrap: wrap;
+}
+
+.row--center {
+  justify-content: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+/* ───────────── top bar ───────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s5);
+  min-height: var(--topbar-h);
+  padding: 0 var(--s4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.brand__logo {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  background: var(--primary-btn);
+  color: var(--on-primary);
+}
+
+.brand__name {
+  font-size: 14px;
+}
+
+.tabs {
+  display: flex;
+  align-self: stretch;
+  gap: var(--s1);
+  overflow-x: auto;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 0 var(--s3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-2);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color var(--ease), border-color var(--ease);
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-current="page"] {
+  color: var(--primary-text);
+  border-bottom-color: var(--primary);
+}
+
+.tab__count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--neutral-soft);
+  color: var(--neutral-text);
+  font-size: 12px;
+  text-align: center;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-left: auto;
+}
+
+.inline-field {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.conn__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--neutral);
+}
+
+.conn--live .conn__dot {
+  background: var(--ok);
+}
+
+.conn--offline .conn__dot {
+  background: var(--danger);
+}
+
+.conn--connecting .conn__dot {
+  background: var(--warn);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  padding: var(--s2) var(--s4);
+  background: var(--warn-soft);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.banner .ico {
+  color: var(--warn-text);
+}
+
+/* ───────────── controls ───────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--control-h);
+  padding: 0 var(--s3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--ease), border-color var(--ease), color var(--ease);
+}
+
+.btn:hover {
+  background: var(--hover);
+}
+
+.btn--sm {
+  min-height: 28px;
+  padding: 0 var(--s2);
+  font-size: 12px;
+}
+
+.btn--icon {
+  width: var(--control-h);
+  padding: 0;
+}
+
+.btn--icon.btn--sm {
+  width: 28px;
+}
+
+.btn--primary {
+  border-color: var(--primary-btn);
+  background: var(--primary-btn);
+  color: var(--on-primary);
+}
+
+.btn--primary:hover {
+  border-color: var(--primary-btn-hover);
+  background: var(--primary-btn-hover);
+}
+
+.btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-2);
+}
+
+.btn--danger-outline {
+  border-color: var(--danger);
+  color: var(--danger-text);
+}
+
+.btn--danger-outline:hover {
+  background: var(--danger-soft);
+}
+
+.btn--locked,
+.btn[aria-disabled="true"] {
+  border-style: dashed;
+  background: transparent;
+  color: var(--text-3);
+}
+
+.input,
+.select {
+  min-height: var(--control-h);
+  max-width: 100%;
+  padding: 0 var(--s2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color var(--ease);
+}
+
+.input:hover,
+.select:hover {
+  border-color: var(--text-3);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.input--sm,
+.select--sm {
+  min-height: 28px;
+  font-size: 12px;
+}
+
+.input--num {
+  width: 72px;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.check--block {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--s2) 0;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.check input {
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  accent-color: var(--primary-btn);
+}
+
+.seg {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.seg__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 var(--s3);
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.seg__btn[aria-pressed="true"] {
+  background: var(--primary-btn);
+  color: var(--on-primary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--neutral-soft);
+  color: var(--neutral-text);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge--primary {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+}
+
+.badge--ok {
+  background: var(--ok-soft);
+  color: var(--ok-text);
+}
+
+.badge--warn {
+  background: var(--warn-soft);
+  color: var(--warn-text);
+}
+
+.badge--danger {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+.badge--info {
+  background: var(--info-soft);
+  color: var(--info-text);
+}
+
+.link,
+.id-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary-text);
+  text-align: left;
+}
+
+.id-link {
+  font: 650 12px var(--mono);
+}
+
+.link:hover,
+.id-link:hover {
+  text-decoration: underline;
+}
+
+.count {
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--neutral-soft);
+  color: var(--neutral-text);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ───────────── layout ───────────── */
+.main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4);
+  overflow: auto;
+}
+
+.main--board {
+  overflow: hidden;
+}
+
+.main--board.main--list {
+  overflow: hidden;
+}
+
+.main--sprint,
+.main--team,
+.main--retro {
+  align-items: stretch;
+}
+
+.k-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mine {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-2);
+}
+
+.mine__who {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+}
+
+.mine strong {
+  color: var(--text);
+}
+
+.mine__cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s3);
+}
+
+.toolbar__count {
+  margin-left: auto;
+  color: var(--text-3);
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search .ico {
+  position: absolute;
+  left: var(--s2);
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.search .input {
+  width: 260px;
+  padding-left: 30px;
+  padding-right: 28px;
+}
+
+.search kbd {
+  position: absolute;
+  right: var(--s2);
+  padding: 0 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  color: var(--text-3);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* ───────────── board ───────────── */
+.kgrid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: var(--s3);
+  overflow-x: auto;
+  padding-bottom: var(--s1);
+}
+
+.kcol {
+  position: relative;
+  flex: 0 0 var(--col-w);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--col, var(--neutral));
+  border-radius: var(--r);
+  background: var(--surface-2);
+}
+
+.tone-neutral {
+  --col: var(--neutral);
+}
+
+.tone-primary {
+  --col: var(--primary);
+}
+
+.tone-warn {
+  --col: var(--warn);
+}
+
+.tone-info {
+  --col: var(--info);
+}
+
+.tone-danger {
+  --col: var(--danger);
+}
+
+.tone-ok {
+  --col: var(--ok);
+}
+
+.kcol--rail {
+  flex-basis: 44px;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3) 0;
+  color: var(--text-2);
+  font-weight: 600;
+  background: var(--surface-2);
+}
+
+.kcol--rail:hover {
+  background: var(--hover);
+}
+
+.kcol__rail-label {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+}
+
+.kcol__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+}
+
+.kcol__head h2 {
+  flex: 1;
+  font-size: 13px;
+}
+
+.kcol__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: 0 var(--s2) var(--s2);
+  overflow-y: auto;
+}
+
+.kcol__empty {
+  padding: var(--s5) var(--s2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm);
+  color: var(--text-3);
+  text-align: center;
+}
+
+.kcol.is-drop-ok {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  background: var(--primary-soft);
+}
+
+.kcol.is-drop-blocked {
+  outline: 2px dashed var(--danger);
+  outline-offset: -2px;
+}
+
+.kcol.is-drop-blocked::after {
+  content: attr(data-hint);
+  position: absolute;
+  inset: auto var(--s2) var(--s2);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  transition: border-color var(--ease);
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+}
+
+.card[draggable="true"] {
+  cursor: grab;
+}
+
+.card.is-dragging {
+  opacity: 0.45;
+}
+
+.card--readonly {
+  background: var(--surface-2);
+}
+
+.card__top,
+.card__meta,
+.card__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s2);
+}
+
+.card__title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+}
+
+.card__title:hover {
+  color: var(--primary-text);
+}
+
+.who {
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.who b {
+  margin-right: 2px;
+  color: var(--text-3);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.who--none {
+  color: var(--text-3);
+  font-style: italic;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+  margin: var(--s6) auto;
+  max-width: 520px;
+  padding: var(--s5);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--text-2);
+  text-align: center;
+}
+
+.empty h3 {
+  color: var(--text);
+  font-size: 15px;
+}
+
+/* ───────────── tables ───────────── */
+.tablewrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+
+.tablewrap--inline {
+  flex: none;
+}
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tbl th,
+.tbl td {
+  padding: var(--s2) var(--s3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tbl th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.tbl tbody tr:hover {
+  background: var(--hover);
+}
+
+.tbl tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.cell-title {
+  min-width: 220px;
+  max-width: 420px;
+}
+
+.empty-cell {
+  padding: var(--s5) !important;
+  color: var(--text-3);
+  text-align: center !important;
+}
+
+/* ───────────── panels / forms ───────────── */
+.panel {
+  flex: none;
+  padding: var(--s4);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+
+.panel--narrow {
+  width: 100%;
+  max-width: 760px;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s3);
+}
+
+.panel .tablewrap {
+  border-radius: var(--r-sm);
+}
+
+.note {
+  margin-top: var(--s3);
+  color: var(--text-2);
+}
+
+.note + .stack {
+  margin-top: var(--s4);
+}
+
+.note--warn {
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--warn-soft);
+  color: var(--text);
+}
+
+.cap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--s3);
+}
+
+.cap {
+  padding: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.cap__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s2);
+  margin-bottom: var(--s2);
+}
+
+.bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--neutral-soft);
+  overflow: hidden;
+}
+
+.bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ok);
+}
+
+.bar__fill--warn {
+  background: var(--warn);
+}
+
+.bar__fill--danger {
+  background: var(--danger);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--s3);
+  align-items: start;
+}
+
+.form-grid--2 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  min-width: 0;
+}
+
+.field > span {
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.field .input,
+.field .select {
+  width: 100%;
+}
+
+.field .row .input--num {
+  flex: 1;
+}
+
+.field--action {
+  align-self: end;
+}
+
+.field__err {
+  color: var(--danger-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fieldset {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+.fieldset legend {
+  padding: 0 var(--s1);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ───────────── drawer ───────────── */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  background: var(--scrim);
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(540px, 100%);
+  height: 100%;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: drawer-in 160ms ease-out;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+.drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s4);
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  min-width: 0;
+}
+
+.drawer__heading h2 {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.drawer__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s4);
+  overflow-y: auto;
+}
+
+.drawer__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s2) var(--s4);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.pathbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.next {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s2);
+  padding: var(--s3);
+  border: 1px solid var(--primary);
+  border-radius: var(--r-sm);
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  font-weight: 600;
+}
+
+.eyebrow {
+  margin-bottom: var(--s2);
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.md {
+  margin: 0;
+  max-height: 46vh;
+  padding: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+
+/* ───────────── toast ───────────── */
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: var(--s5);
+  z-index: 60;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--s4));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) var(--s2) var(--s2) var(--s4);
+  border: 1px solid var(--border-strong);
+  border-left-width: 4px;
+  border-left-color: var(--ok);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  font-weight: 600;
+  pointer-events: auto;
+}
+
+.toast--err {
+  border-left-color: var(--danger);
+}
+
+/* ───────────── responsive & a11y ───────────── */
+@media (max-width: 720px) {
+  .topbar {
+    padding: var(--s2) var(--s3);
+  }
+
+  .tools {
+    margin-left: 0;
+  }
+
+  .search,
+  .search .input {
+    width: 100%;
+  }
+
+  .toolbar__count {
+    margin-left: 0;
+  }
+
+  .main {
+    padding: var(--s3);
+  }
+
+  .kcol {
+    flex-basis: 84vw;
+  }
+
+  .kcol--rail {
+    flex-basis: 44px;
+  }
+
+  .kgrid {
+    scroll-snap-type: x proximity;
+  }
+
+  .kcol {
+    scroll-snap-align: start;
+  }
+}
+
+@media (pointer: coarse) {
+  :root {
+    --control-h: 44px;
+  }
+
+  .btn--sm,
+  .input--sm,
+  .select--sm {
+    min-height: 40px;
+  }
+
+  .btn--icon.btn--sm {
+    width: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div id="board-app"></div>
+  <script>window.__BOARD_STATE__ = {"updatedAt":"2026-11-04T21:59:34.657Z","columns":["BACKLOG","READY_FOR_DEV","IN_PROGRESS","PENDING_BA","PENDING_TL","READY_FOR_QA","IN_DEV_FIX","IN_RETEST","DONE"],"activeSprint":"SPRINT-01","roster":[{"member":"@tl-1","name":"Tech Lead","role":"tl","capacitySp":10,"specialties":"Architecture","status":"Active"}],"capacity":{"sprintId":"SPRINT-01","members":[{"member":"@tl-1","name":"Tech Lead","role":"tl","capacitySp":10,"specialties":"Architecture","status":"OK","assignedSp":0}],"rolloverQaTickets":[]},"items":[{"id":"03","rawFileId":"03-teacher-assignment","type":"TICKET","slug":"mvp-core","status":"BACKLOG","title":"03: Phân công giáo viên vào lớp (3 GV/lớp, vai trò chủ nhiệm/hỗ trợ)","sprint":"BACKLOG","sprintTarget":"DONE","sprintGoalMet":false,"devAssignee":"@unassigned","qaAssignee":"@unassigned","totalSp":0,"devSp":0,"qaSp":0,"body":"# 03: Phân công giáo viên vào lớp (3 GV/lớp, vai trò chủ nhiệm/hỗ trợ)\n\n**Serves:** REQ-6, REQ-9 (spec mvp-core) — thực thi D-02, D-05\n- Estimate: 0 SP (DEV: 0 SP | QA: 0 SP)\n- Feature ID: F-001\n- Sprint: BACKLOG\n- Sprint Target: DONE\n- Dev Assignee: @unassigned\n- QA Assignee: @unassigned\n- Estimate (optional): 8 SP (DEV: 5 SP | QA: 3 SP)\n\n**What to build:** Nghiệp vụ phân công giáo viên vào lớp với vai trò Homeroom/Support, thực thi bất biến: mỗi lớp tối đa 3 giáo viên, đúng 1 chủ nhiệm, 1 giáo viên chủ nhiệm tối đa 1 lớp; cảnh báo thiếu giáo viên.\n\n**Blocked by:** 01, 02 (cần Class và Teacher tồn tại).\n\n**Interfaces:**\n- Consumes: `Class` (ticket 01), `Teacher` (ticket 02); `Result\u003cT>`/`Error`; `IApplicationDbContext`.\n- Produces: entity `ClassAssignment` + `AssignTeacherCommand`, `RemoveTeacherAssignmentCommand`; bất biến số lượng/vai trò nằm trong aggregate `Class`.\n\n**Out of scope:** xếp học sinh (ticket 05). Regression boundary: Class CRUD và Teacher CRUD không đổi quy tắc đã có.\n\n**Plan & Verification:**\n- Seam & Failing Test: `dotnet test tests/SmartKMS.Application.UnitTests --filter \"FullyQualifiedName~AssignTeacher\"` (RED).\n- Review Focus Pinned: lớp đã có chủ nhiệm nhưng gán thêm chủ nhiệm -> chặn; một GV chủ nhiệm 2 lớp -> chặn.\n- Micro-Step 1: test fail AssignTeacher (gán happy path 3 GV) -> pass.\n- Micro-Step 2: edge (gán GV thứ 4, gán chủ nhiệm thứ 2, chủ nhiệm 2 lớp) -> pass.\n- Micro-Step 3: dọn dẹp, diff sạch.\n- Verify Command: `dotnet test tests/SmartKMS.Application.UnitTests/SmartKMS.Application.UnitTests.csproj --filter \"FullyQualifiedName~AssignTeacher\" && dotnet build SmartKMS.sln`\n\n**Quality Gates:**\n- Commands: build; Application.UnitTests `--filter \"FullyQualifiedName~AssignTeacher\"`; ArchitectureTests; format.\n- Evidence: `board/features/mvp-core/verification.md` — hàng phân công giáo viên.\n- UI flows: `e2e/mvp-core.spec.ts` — \"phân công & chặn GV thứ 4/chủ nhiệm trùng\".\n\n**Status:** BACKLOG\n\n**Acceptance (Capability & Regression Evals):**\n- [ ] [Capability] Given lớp còn chỗ và GV chưa chủ nhiệm lớp khác, When gán giáo viên với vai trò Homeroom/Support, Then phân công thành công và thấy trong danh sách lớp.\n  - Fails when: phân công thất bại dù thỏa điều kiện.\n- [ ] [Capability / Review Focus] Given lớp đã đủ 3 giáo viên, When gán thêm giáo viên thứ 4, Then bị chặn bằng `Error.Validation`.\n  - Fails when: cho phép 4 giáo viên trong một lớp.\n- [ ] [Capability / Review Focus] Given lớp đã có chủ nhiệm, When gán thêm chủ nhiệm, Then bị chặn bằng `Error.Validation`.\n  - Fails when: lớp có 2 chủ nhiệm.\n- [ ] [Capability / Review Focus] Given một giáo viên đang chủ nhiệm lớp A, When phân công chủ nhiệm lớp B, Then bị chặn bằng `Error.Validation`.\n  - Fails when: một GV chủ nhiệm 2 lớp.\n- [ ] [Capability] Given lớp có 1–2 giáo viên, When xem trạng thái, Then cảnh báo \"thiếu giáo viên\".\n  - Fails when: không phát sinh cảnh báo cho lớp dưới 3 GV.\n- [ ] [Regression] Given phân công hợp lệ, When chạy lại test Class/Teacher, Then vẫn green.\n  - Fails when: ArchitectureTests/buôn báo lỗi.\n","file":"board/features/mvp-core/tickets/03-teacher-assignment.md"},{"id":"05","rawFileId":"05-child-enrollment","type":"TICKET","slug":"mvp-core","status":"BACKLOG","title":"05: Xếp lớp & chuyển lớp học sinh (sĩ số 30, cảnh báo độ tuổi, lịch sử)","sprint":"BACKLOG","sprintTarget":"DONE","sprintGoalMet":false,"devAssignee":"@unassigned","qaAssignee":"@unassigned","totalSp":0,"devSp":0,"qaSp":0,"body":"# 05: Xếp lớp & chuyển lớp học sinh (sĩ số 30, cảnh báo độ tuổi, lịch sử)\n\n**Serves:** REQ-13, REQ-14 (spec mvp-core) — thực thi D-02 sĩ số, D-09 độ tuổi, D-06 chuyển lớp\n- Feature ID: F-001\n- Sprint: BACKLOG\n- Sprint Target: DONE\n- Dev Assignee: @unassigned\n- QA Assignee: @unassigned\n- Estimate (optional): 8 SP (DEV: 5 SP | QA: 3 SP)\n\n**What to build:** Nghiệp vụ xếp học sinh vào lớp (chặn khi lớp đủ 30 bằng `Error.Conflict`, cảnh báo không chặn khi lệch độ tuổi khối) và chuyển lớp giữa năm (có lịch sử lớp đã học, chặn khi lớp đích đủ 30).\n\n**Blocked by:** 01, 04 (cần Class và Child).\n\n**Interfaces:**\n- Consumes: `Class` (ticket 01), `Child` (ticket 04); `Result\u003cT>`/`Error`; `IApplicationDbContext`.\n- Produces: entity `ChildEnrollment` + `EnrollChildCommand`, `TransferChildCommand`; bất biến sĩ số nằm trong aggregate `Class`.\n\n**Out of scope:** lên khối cuối năm & quản lý năm học (GĐ4). Regression boundary: Class/Child CRUD không đổi.\n\n**Plan & Verification:**\n- Seam & Failing Test: `dotnet test tests/SmartKMS.Application.UnitTests --filter \"FullyQualifiedName~EnrollChild\"` (RED).\n- Review Focus Pinned: lớp đủ 30 vẫn xếp -> chặn Conflict; xếp lệch độ tuổi -> cảnh báo nhưng thành công; chuyển vào lớp đầy -> chặn.\n- Micro-Step 1: test fail EnrollChild (hợp lệ) -> pass.\n- Micro-Step 2: edge (đủ 30, lệch tuổi, chuyển vào lớp đầy) -> pass.\n- Micro-Step 3: dọn dẹp, diff sạch.\n- Verify Command: `dotnet test tests/SmartKMS.Application.UnitTests/SmartKMS.Application.UnitTests.csproj --filter \"FullyQualifiedName~EnrollChild\\|TransferChild\" && dotnet build SmartKMS.sln`\n\n**Quality Gates:**\n- Commands: build; Application.UnitTests `--filter \"FullyQualifiedName~EnrollChild\\|TransferChild\"`; ArchitectureTests; format.\n- Evidence: `board/features/mvp-core/verification.md` — hàng xếp lớp/chuyển lớp.\n- UI flows: `e2e/mvp-core.spec.ts` — \"xếp lớp & chặn lớp đầy & chuyển lớp có lịch sử\".\n\n**Status:** BACKLOG\n\n**Acceptance (Capability & Regression Evals):**\n- [ ] [Capability] Given lớp còn chỗ (\u003c30), When xếp học sinh vào lớp, Then thành công và trẻ hiển thị trong lớp.\n  - Fails when: xếp thất bại dù còn chỗ.\n- [ ] [Capability / Review Focus] Given lớp đã đủ 30, When xếp thêm, Then bị chặn bằng `Error.Conflict`.\n  - Fails when: xếp vào lớp đầy vẫn thành công.\n- [ ] [Capability / Review Focus] Given trẻ không khớp độ tuổi khối, When xếp vào lớp, Then cảnh báo nhưng vẫn thành công.\n  - Fails when: xếp lệch tuổi bị chặn cứng (trái D-09).\n- [ ] [Capability] Given học sinh ở lớp A, When chuyển sang lớp B còn chỗ, Then chuyển thành công và lưu lịch sử lớp đã học.\n  - Fails when: lịch sử lớp đã học bị mất.\n- [ ] [Capability / Review Focus] Given học sinh chuyển vào lớp B đã đủ 30, Then bị chặn bằng `Error.Conflict`.\n  - Fails when: chuyển vào lớp đầy vẫn thành công.\n- [ ] [Regression] Given Class/Child đã có, When chạy test Class/Child, Then vẫn green.\n  - Fails when: ArchitectureTests/build báo lỗi.\n","file":"board/features/mvp-core/tickets/05-child-enrollment.md"},{"id":"06","rawFileId":"06-dashboard","type":"TICKET","slug":"mvp-core","status":"BACKLOG","title":"06: Dashboard tổng quan & cảnh báo nghiệp vụ","sprint":"BACKLOG","sprintTarget":"DONE","sprintGoalMet":false,"devAssignee":"@unassigned","qaAssignee":"@unassigned","totalSp":0,"devSp":0,"qaSp":0,"body":"# 06: Dashboard tổng quan & cảnh báo nghiệp vụ\n\n**Serves:** REQ-17 (spec mvp-core) — thực thi D-02, D-08\n- Feature ID: F-001\n- Sprint: BACKLOG\n- Sprint Target: DONE\n- Dev Assignee: @unassigned\n- QA Assignee: @unassigned\n- Estimate (optional): 4 SP (DEV: 2 SP | QA: 2 SP)\n\n**What to build:** Màn hình tổng quan hiển thị tổng số lớp/giáo viên/học sinh, sĩ số theo từng khối, và danh sách cảnh báo (lớp thiếu giáo viên, lớp gần đầy 28–29/30, lớp đã đầy 30/30).\n\n**Blocked by:** 01, 03 (cần dữ liệu lớp + phân công để có cảnh báo thiếu GV).\n\n**Interfaces:**\n- Consumes: `Class`, `Teacher`, `Child`, `ClassAssignment`, `ChildEnrollment`; `Result\u003cT>`/`Error`; `IApplicationDbContext`; `PageHeader`, MudBlazor primitives, `KindergartenTheme`.\n- Produces: `DashboardQuery` (read model tổng hợp).\n\n**Out of scope:** báo cáo nâng cao, biểu đồ chuyên cần/chuyên thu (GĐ3/4). Regression boundary: không đổi logic module khác.\n\n**Plan & Verification:**\n- Seam & Failing Test: `dotnet test tests/SmartKMS.Application.UnitTests --filter \"FullyQualifiedName~Dashboard\"` (RED).\n- Review Focus Pinned: lớp ≥28/30 phải xuất hiện trong cảnh báo tương ứng.\n- Micro-Step 1: test fail Dashboard (số liệu tổng) -> pass.\n- Micro-Step 2: edge (ngưỡng 28 gần đầy, 30 đã đầy, thiếu GV) -> pass.\n- Micro-Step 3: dọn dẹp, diff sạch.\n- Verify Command: `dotnet test tests/SmartKMS.Application.UnitTests/SmartKMS.Application.UnitTests.csproj --filter \"FullyQualifiedName~Dashboard\" && dotnet build SmartKMS.sln`\n\n**Quality Gates:**\n- Commands: build; Application.UnitTests `--filter \"FullyQualifiedName~Dashboard\"`; ArchitectureTests; format.\n- Evidence: `board/features/mvp-core/verification.md` — hàng dashboard.\n- UI flows: `e2e/mvp-core.spec.ts` — \"xem dashboard tổng quan & cảnh báo\".\n\n**Status:** BACKLOG\n\n**Acceptance (Capability & Regression Evals):**\n- [ ] [Capability] Given dữ liệu trường đã có, When mở dashboard, Then hiển thị tổng số lớp, giáo viên, học sinh đúng và sĩ số theo từng khối.\n  - Fails when: số liệu thống kê sai lệch.\n- [ ] [Capability / Review Focus] Given lớp đạt 28–29/30, When xem cảnh báo, Then xuất hiện \"gần đầy\".\n  - Fails when: lớp ≥28 không xuất hiện cảnh báo gần đầy tương ứng.\n- [ ] [Capability / Review Focus] Given lớp đủ 30/30, When xem cảnh báo, Then xuất hiện \"đã đầy\".\n  - Fails when: lớp 30/30 không xuất hiện cảnh báo đã đầy.\n- [ ] [Capability] Given lớp có 1–2 giáo viên, When xem cảnh báo, Then xuất hiện \"thiếu giáo viên\".\n  - Fails when: không phát sinh cảnh báo thiếu giáo viên.\n- [ ] [Regression] Given module Classes/Teachers, When chạy test, Then vẫn green.\n  - Fails when: ArchitectureTests/build báo lỗi.\n","file":"board/features/mvp-core/tickets/06-dashboard.md"},{"id":"02","rawFileId":"02-teacher-crud","type":"TICKET","slug":"mvp-core","status":"READY_FOR_DEV","title":"02: Quản lý giáo viên (CRUD + ngừng công tác)","sprint":"BACKLOG","sprintTarget":"DONE","sprintGoalMet":false,"devAssignee":"@tl-1","qaAssignee":"@unassigned","totalSp":2,"devSp":2,"qaSp":0,"body":"# 02: Quản lý giáo viên (CRUD + ngừng công tác)\n\n**Serves:** REQ-7, REQ-8, REQ-10, REQ-11 (spec mvp-core)\n- Estimate: 2 SP (DEV: 2 SP | QA: 0 SP)\n- Feature ID: F-001\n- Sprint: BACKLOG\n- Sprint Target: DONE\n- Dev Assignee: @tl-1\n- QA Assignee: @unassigned\n- Estimate (optional): 6 SP (DEV: 4 SP | QA: 2 SP)\n\n**What to build:** Màn hình hồ sơ giáo viên cho phép tạo (họ tên, ngày sinh, liên hệ, trình độ, ngày vào trường, trạng thái), sửa, ngừng công tác (soft-close), xem danh sách lớp phụ trách, và tìm kiếm/lọc theo trạng thái/lớp/khối.\n\n**Blocked by:** None (danh sách lớp phụ trách có thể trống trước khi có ticket 03).\n\n**Interfaces:**\n- Consumes: `Result\u003cT>`/`Error`; `IApplicationDbContext`; `PageHeader`, `DataTable\u003cTItem>`, `EmptyState`, `ConfirmDialog`, MudBlazor primitives.\n- Produces: `Teacher` aggregate + `CreateTeacherCommand`, `UpdateTeacherCommand`, `WithdrawTeacherCommand`, `ListTeachersQuery`, `GetTeacherAssignmentsQuery`.\n\n**Out of scope:** Phân công giáo viên vào lớp (ticket 03). Regression boundary: module Classes (ticket 01) không đổi.\n\n**Plan & Verification:**\n- Seam & Failing Test: `dotnet test tests/SmartKMS.Application.UnitTests --filter \"FullyQualifiedName~CreateTeacher\"` (RED).\n- Review Focus Pinned: một giáo viên chủ nhiệm 2 lớp -> chặn (chốt tại ticket 03; ở đây kiểm tra dữ liệu hồ sơ đúng).\n- Micro-Step 1: test fail CreateTeacher -> pass.\n- Micro-Step 2: edge (thiếu họ tên/ngày sinh, ngừng công tác không xóa) -> pass.\n- Micro-Step 3: dọn dẹp, diff sạch.\n- Verify Command: `dotnet test tests/SmartKMS.Application.UnitTests/SmartKMS.Application.UnitTests.csproj --filter \"FullyQualifiedName~Teacher\" && dotnet build SmartKMS.sln`\n\n**Quality Gates:**\n- Commands: build; Application.UnitTests `--filter \"FullyQualifiedName~Teacher\"`; ArchitectureTests; format.\n- Evidence: `board/features/mvp-core/verification.md` — hàng Teacher CRUD.\n- UI flows: `e2e/mvp-core.spec.ts` — \"tạo giáo viên & ngừng công tác\".\n\n**Status:** READY_FOR_DEV\n\n**Acceptance (Capability & Regression Evals):**\n- [ ] [Capability] Given biểu mẫu giáo viên hợp lệ, When gửi tạo, Then hồ sơ lưu đủ họ tên, ngày sinh, liên hệ, trình độ, ngày vào trường, trạng thái làm việc.\n  - Fails when: thiếu họ tên hoặc ngày sinh.\n- [ ] [Capability] Given một giáo viên, When ngừng công tác, Then trạng thái đổi mà không xóa khỏi lịch sử phân công.\n  - Fails when: giáo viên biến mất khỏi danh sách/lịch sử.\n- [ ] [Capability] Given một giáo viên, When xem danh sách lớp phụ trách, Then liệt kê các lớp chủ nhiệm + hỗ trợ.\n  - Fails when: danh sách lớp thiếu phân công (trống hợp lệ trước ticket 03).\n- [ ] [Capability] Given danh sách giáo viên, When lọc theo trạng thái/lớp/khối, Then kết quả khớp tiêu chí.\n  - Fails when: kết quả lọc không khớp.\n- [ ] [Regression] Given module Classes (ticket 01), When chạy test Class, Then vẫn green.\n  - Fails when: ArchitectureTests/buôn báo lỗi.\n","file":"board/features/mvp-core/tickets/02-teacher-crud.md"},{"id":"04","rawFileId":"04-child-crud","type":"TICKET","slug":"mvp-core","status":"READY_FOR_DEV","title":"04: Quản lý học sinh (CRUD + thôi học)","sprint":"BACKLOG","sprintTarget":"DONE","sprintGoalMet":false,"devAssignee":"@tl-1","qaAssignee":"@unassigned","totalSp":2,"devSp":2,"qaSp":0,"body":"# 04: Quản lý học sinh (CRUD + thôi học)\n\n**Serves:** REQ-12, REQ-15, REQ-16 (spec mvp-core)\n- Estimate: 2 SP (DEV: 2 SP | QA: 0 SP)\n- Feature ID: F-001\n- Sprint: BACKLOG\n- Sprint Target: DONE\n- Dev Assignee: @tl-1\n- QA Assignee: @unassigned\n- Estimate (optional): 6 SP (DEV: 4 SP | QA: 2 SP)\n\n**What to build:** Màn hình hồ sơ học sinh cho phép tạo (họ tên, ngày sinh, giới tính, thông tin phụ huynh, địa chỉ, ngày nhập học, trạng thái), sửa, thôi học (soft-close), xem bạn cùng lớp + giáo viên phụ trách (trống trước ticket 05), và tìm kiếm/lọc theo lớp/khối/trạng thái.\n\n**Blocked by:** None (xem bạn cùng lớp/giáo viên có thể trống trước ticket 05/03).\n\n**Interfaces:**\n- Consumes: `Result\u003cT>`/`Error`; `IApplicationDbContext`; `PageHeader`, `DataTable\u003cTItem>`, `EmptyState`, `ConfirmDialog`, MudBlazor primitives.\n- Produces: `Child` aggregate + `CreateChildCommand`, `UpdateChildCommand`, `WithdrawChildCommand`, `ListChildrenQuery`, `GetChildContextQuery` (bạn cùng lớp + giáo viên).\n\n**Out of scope:** xếp lớp và chuyển lớp (ticket 05). Regression boundary: Teacher/Class không đổi.\n\n**Plan & Verification:**\n- Seam & Failing Test: `dotnet test tests/SmartKMS.Application.UnitTests --filter \"FullyQualifiedName~CreateChild\"` (RED).\n- Review Focus Pinned: (không có chặn cứng ở CRUD; chặn tại ticket 05).\n- Micro-Step 1: test fail CreateChild -> pass.\n- Micro-Step 2: edge (thiếu họ tên/ngày sinh, thôi học không xóa) -> pass.\n- Micro-Step 3: dọn dẹp, diff sạch.\n- Verify Command: `dotnet test tests/SmartKMS.Application.UnitTests/SmartKMS.Application.UnitTests.csproj --filter \"FullyQualifiedName~Child\" && dotnet build SmartKMS.sln`\n\n**Quality Gates:**\n- Commands: build; Application.UnitTests `--filter \"FullyQualifiedName~Child\"`; ArchitectureTests; format.\n- Evidence: `board/features/mvp-core/verification.md` — hàng Child CRUD.\n- UI flows: `e2e/mvp-core.spec.ts` — \"tạo học sinh & thôi học\".\n\n**Status:** READY_FOR_DEV\n\n**Acceptance (Capability & Regression Evals):**\n- [ ] [Capability] Given biểu mẫu học sinh hợp lệ, When gửi tạo, Then hồ sơ lưu đủ họ tên, ngày sinh, giới tính, phụ huynh, địa chỉ, ngày nhập học, trạng thái.\n  - Fails when: thiếu họ tên hoặc ngày sinh.\n- [ ] [Capability] Given một học sinh, When thôi học, Then trạng thái đổi mà không xóa khỏi lịch sử.\n  - Fails when: học sinh biến mất khỏi dữ liệu.\n- [ ] [Capability] Given một học sinh có lớp, When xem chi tiết, Then hiển thị lớp hiện tại, bạn cùng lớp, giáo viên phụ trách.\n  - Fails when: danh sách hiển thị sai (trống hợp lệ trước ticket 03/05).\n- [ ] [Capability] Given danh sách học sinh, When lọc theo lớp/khối/trạng thái, Then kết quả khớp tiêu chí.\n  - Fails when: kết quả lọc không khớp.\n- [ ] [Regression] Given module Classes/Teachers, When chạy test Class/Teacher, Then vẫn green.\n  - Fails when: ArchitectureTests/build báo lỗi.\n","file":"board/features/mvp-core/tickets/04-child-crud.md"},{"id":"01","rawFileId":"01-class-crud","type":"TICKET","slug":"mvp-core","status":"IN_PROGRESS","title":"01: Quản lý lớp học (CRUD + đóng lớp)","sprint":"BACKLOG","sprintTarget":"DONE","sprintGoalMet":false,"devAssignee":"@tl-1","qaAssignee":"@unassigned","totalSp":2,"devSp":2,"qaSp":0,"body":"# 01: Quản lý lớp học (CRUD + đóng lớp)\r\n\r\n**Serves:** REQ-1, REQ-2, REQ-3, REQ-4, REQ-5 (spec mvp-core)\r\n- Plan-Approved: true\r\n- Estimate: 2 SP (DEV: 2 SP | QA: 0 SP)\r\n- Feature ID: F-001\r\n- Sprint: BACKLOG\r\n- Sprint Target: DONE\r\n- Dev Assignee: @tl-1\r\n- QA Assignee: @unassigned\r\n- Estimate (optional): 8 SP (DEV: 5 SP | QA: 3 SP)\r\n\r\n**What to build:** Màn hình danh sách lớp học cho phép tạo, xem danh sách (lọc theo khối/năm học), xem chi tiết (danh sách giáo viên + học sinh + chỗ trống), cập nhật tên/phòng, và đóng lớp (soft-close).\r\n\r\n**Blocked by:** None\r\n\r\n**Interfaces:**\r\n- Consumes: `Result\u003cT>`/`Error` (AD-1); `IApplicationDbContext`; `PageHeader`, `DataTable\u003cTItem>`, `EmptyState`, `ConfirmDialog`, MudBlazor primitives (Reuse từ spec `## Existing Reusable Components`).\r\n- Produces: `Class` aggregate + `CreateClassCommand/Query`, `ListClassesQuery`, `GetClassDetailQuery`, `UpdateClassCommand`, `CloseClassCommand`; giá trị `AgeGroup` (Mầm/Chồi/Lá) tái sử dụng từ GLOSSARY.\r\n\r\n**Out of scope:** Phân công giáo viên vào lớp (ticket 03); xếp học sinh vào lớp (ticket 05). Regression boundary: `Home.razor` và scaffold Sprint 0 không đổi.\r\n\r\n**Plan & Verification:**\r\n- Seam & Failing Test: `dotnet test tests/SmartKMS.Application.UnitTests --filter \"FullyQualifiedName~CreateClass\"` (RED vì handler chưa có).\r\n- Review Focus Pinned: lớp đóng (Closed) vẫn nhận học sinh/giáo viên mới -> chặn.\r\n- Micro-Step 1: viết test fail cho CreateClass -> cài handler làm pass.\r\n- Micro-Step 2: thêm edge (tên lớp trùng cùng khối+năm học, thiếu trường bắt buộc) -> pass.\r\n- Micro-Step 3: dọn dẹp, xác nhận diff sạch.\r\n- Verify Command: `dotnet test tests/SmartKMS.Application.UnitTests/SmartKMS.Application.UnitTests.csproj --filter \"FullyQualifiedName~Class\" && dotnet build SmartKMS.sln`\r\n\r\n**Quality Gates:**\r\n- Trace to the spec's `## Quality Gate Plan`: build + Application.UnitTests + ArchitectureTests + format.\r\n- Commands: `dotnet build SmartKMS.sln`; `dotnet test tests/SmartKMS.Application.UnitTests/SmartKMS.Application.UnitTests.csproj --filter \"FullyQualifiedName~Class\"`; `dotnet test tests/SmartKMS.ArchitectureTests/SmartKMS.ArchitectureTests.csproj --filter \"FullyQualifiedName~CleanArchitectureRulesTests\"`; `dotnet format SmartKMS.sln --verify-no-changes`.\r\n- Evidence: `board/features/mvp-core/verification.md` — hàng Class CRUD.\r\n- UI flows: `e2e/mvp-core.spec.ts` — \"tạo lớp & xem danh sách & đóng lớp\".\r\n\r\n**Status:** IN_PROGRESS\r\n\r\n## Technical Plan\r\n\r\n### Component Breakdown & Surgical Footprint\r\n\r\n| Layer | File | Action |\r\n| :--- | :--- | :--- |\r\n| Domain | `src/SmartKMS.Domain/Modules/Classes/AgeGroup.cs` | NEW — value object 3 instance `Mam`/`Choi`/`La` |\r\n| Domain | `src/SmartKMS.Domain/Modules/Classes/ClassStatus.cs` | NEW — enum `Open`/`Closed` |\r\n| Domain | `src/SmartKMS.Domain/Modules/Classes/Class.cs` | NEW — aggregate root, `MaxCapacity=30`, `Create`/`Update`/`Close` |\r\n| Application | `Modules/Classes/Commands/{CreateClassCommand,UpdateClassCommand,CloseClassCommand}.cs` (+ handlers) | NEW |\r\n| Application | `Modules/Classes/Queries/{ListClassesQuery,GetClassDetailQuery}.cs` (+ handlers) | NEW |\r\n| Application | `Modules/Classes/Dtos/{ClassSummaryDto,ClassDetailDto}.cs` | NEW |\r\n| Application | `Modules/Classes/Validators/CreateClassCommandValidator.cs` (+ Update/Close) | NEW — FluentValidation |\r\n| Infrastructure | `Persistence/Configurations/ClassConfiguration.cs` | NEW — snake_case + uq + AgeGroup converter |\r\n| Infrastructure | `Persistence/ApplicationDbContext.cs` | MODIFY — thêm `DbSet\u003cClass>` |\r\n| Infrastructure | `Persistence/Migrations/` | NEW — `InitialCreate` (Identity + classes) |\r\n| Web | `Components/Pages/Classes.razor` | NEW — list + filter + create/edit/close |\r\n| Web | `Components/Pages/Classes/ClassFormDialog.razor` | NEW — form tạo/sửa |\r\n| Web | `Components/Layout/NavMenu.razor` | MODIFY — thêm nav \"Lớp học\" (`/classes`) |\r\n| Tests | `tests/SmartKMS.Application.UnitTests/SmartKMS.Application.UnitTests.csproj` | MODIFY — thêm `Microsoft.EntityFrameworkCore.InMemory` |\r\n| Tests | `tests/SmartKMS.Application.UnitTests/TestApplicationDbContext.cs` | NEW — in-memory `IApplicationDbContext` |\r\n| Tests | `tests/SmartKMS.Application.UnitTests/ClassHandlersTests.cs` | NEW — RED→GREEN |\r\n| Tests | `tests/SmartKMS.Domain.UnitTests/{AgeGroupTests,ClassTests}.cs` | NEW |\r\n| E2E | `e2e/mvp-core.spec.ts` | NEW — happy path |\r\n| Tooling | `scripts/run-e2e-server.ps1` | NEW — ephemeral server supervisor (JIT resource) |\r\n\r\n### Data Flow & Schema Impact\r\n\r\n- Bảng `classes`: `id` (uuid PK `pk_classes`), `name` (text), `age_group` (text), `academic_year` (text), `room` (text null), `status` (int/text default `Open`); unique `uq_classes_name_age_group_academic_year`.\r\n- `AgeGroup` lưu string qua converter (`Name` ↔ `AgeGroup.FromName`); lọc bằng equality VO nguyên khối.\r\n- Không FK sang teacher/child (ticket 02–05 thêm ClassAssignment/ChildEnrollment).\r\n- Command: Create → check trùng (name+ageGroup+year) → `Error.Conflict`; Update → check trùng + `Error.NotFound`; Close → `Error.NotFound`, idempotent.\r\n- Query: List (filter ageGroup + year + status) → `ClassSummaryDto`; Detail → `ClassDetailDto` (Teachers/Children rỗng, VacantSeats = 30 − 0).\r\n\r\n### Playwright E2E Happy Path Outline\r\n\r\n`e2e/mvp-core.spec.ts` — \"tạo lớp & xem danh sách & đóng lớp\":\r\n1. Goto `/classes` → hiện `PageHeader` \"Lớp học\" + bảng.\r\n2. Click \"Tạo lớp\" → dialog → điền Tên \"Lá 1\", Khối \"Lá\", Năm học \"2025-2026\", Phòng \"P101\" → Submit.\r\n3. Snackbar thành công; bảng hiện \"Lá 1\" với \"0/30\".\r\n4. Lọc Khối \"Lá\" + Năm học \"2025-2026\" → \"Lá 1\" hiện.\r\n5. Click \"Đóng lớp\" → `ConfirmDialog` → xác nhận → trạng thái \"Đã đóng\".\r\n6. Lọc trạng thái \"Đã đóng\" → \"Lá 1\" vẫn hiện (soft-close).\r\n\r\nEphemeral server: `powershell -ExecutionPolicy Bypass -File scripts/run-e2e-server.ps1 -Port 5160 -TestCommand \"npx playwright test e2e/mvp-core.spec.ts\"`. Yêu cầu PostgreSQL 17 (Docker ephemeral) + migration + `npm install` + `npx playwright install chromium`.\r\n\r\n### Unit Test Matrix (RED Criteria)\r\n\r\n- Domain: `Class.Create` khởi tạo Open + Id; `Class.Update` đổi name/room; `Class.Close` đặt Closed; `AgeGroup.FromName` + value equality.\r\n- Application (EF InMemory): Create hợp lệ → trả Id; trùng tên cùng khối+năm → Conflict; thiếu trường bắt buộc / sai format năm học → Validation; List lọc khối+năm+status; Detail NotFound + Teachers/Children rỗng + Vacant 30; Update đổi tên phản ánh trong list + trùng → Conflict + NotFound; Close đặt Closed + NotFound.\r\n\r\n**Acceptance (Capability & Regression Evals):**\r\n\u003c!-- FOUR-EYES AC ANCHOR -->\r\n- [ ] [Capability] Given biểu mẫu lớp hợp lệ (tên, khối Mầm/Chồi/Lá, năm học \"2025-2026\", phòng), When gửi tạo lớp, Then lớp mới xuất hiện trong danh sách với sĩ số 0/30.\r\n  - Fails when: thiếu trường bắt buộc hoặc tên lớp trùng trong cùng khối+năm học.\r\n- [ ] [Capability] Given danh sách lớp, When lọc theo khối và năm học, Then chỉ các lớp khớp tiêu chí hiển thị.\r\n  - Fails when: kết quả lọc không khớp khối/năm học đã chọn.\r\n- [ ] [Capability] Given một lớp, When xem chi tiết, Then hiển thị danh sách giáo viên + học sinh + số chỗ trống = 30 − sĩ số.\r\n  - Fails when: danh sách giáo viên/học sinh hiển thị thiếu hoặc thừa.\r\n- [ ] [Capability] Given một lớp, When đổi tên/phòng và lưu, Then danh sách phản ánh giá trị mới.\r\n  - Fails when: đổi tên trùng lớp khác cùng khối+năm học.\r\n- [ ] [Capability] Given một lớp, When đóng lớp, Then trạng thái thành Closed (soft-close) và vẫn hiện khi lọc \"đã đóng\".\r\n  - Fails when: lớp biến mất khỏi dữ liệu (xóa cứng) hoặc lớp đóng vẫn nhận giáo viên/học sinh mới (điểm này chốt tại ticket 03/05).\r\n- [ ] [Regression] Given trang Home mặc định Sprint 0, When render, Then vẫn hiển thị không lỗi.\r\n  - Fails when: ArchitectureTests hoặc build báo lỗi.\r\n","file":"board/features/mvp-core/tickets/01-class-crud.md"}]};</script>
+  <script id="board-ui-js">
+/* AI Studio Board UI — single self-contained script (inlined into BOARD.html by board.mjs).
+ *
+ * Conventions
+ * - One state object (S) → pure view functions → painted into 5 fixed regions.
+ * - Event delegation on #board-app (no per-render listeners).
+ * - ONE edit model everywhere: a field saves when it is committed (change / blur / Enter).
+ *   Only the changed field is sent, so Four-Eyes gates never fire on untouched fields.
+ * - paint() never runs while the user is typing in an unsaved field or dragging a card;
+ *   it is deferred and flushed afterwards, so live (SSE) updates cannot eat input.
+ */
+(function () {
+  "use strict";
+
+  /* ───────────────────────── constants ───────────────────────── */
+  const THEME_KEY = "ai_studio_board_theme";
+  const PREFS_KEY = "ai_studio_board_prefs";
+  const CLI = "node board/board.mjs";
+  const DEFAULT_SPRINT = "SPRINT-01";
+  const UNASSIGNED = "@unassigned";
+  const TOAST_MS = { ok: 2800, err: 6000 };
+  const SP_SPLIT_THRESHOLD = 8;
+  const MEMBER_ID_RE = /^@?[a-z0-9][a-z0-9_-]*$/i;
+  const SPRINT_ID_RE = /^[A-Z0-9][A-Z0-9_-]*$/;
+
+  const API = {
+    assign: "/api/ticket/assign",
+    member: "/api/team/member",
+    active: "/api/team/active-member",
+    sync: "/api/sprint/sync",
+    retro: "/api/sprint/retro-input",
+    state: "/api/state",
+    events: "/api/events",
+  };
+
+  const DEFAULT_COLUMNS = [
+    "BACKLOG", "READY_FOR_DEV", "IN_PROGRESS", "PENDING_BA", "PENDING_TL",
+    "READY_FOR_QA", "IN_DEV_FIX", "IN_RETEST", "DONE",
+  ];
+
+  const COLUMN_LABELS = {
+    BACKLOG: "Backlog",
+    READY_FOR_DEV: "Ready for Dev",
+    IN_PROGRESS: "In Progress",
+    PENDING_BA: "Pending BA",
+    PENDING_TL: "Pending TL",
+    READY_FOR_QA: "Ready for QA",
+    IN_DEV_FIX: "In Dev Fix",
+    IN_RETEST: "In Retest",
+    DONE: "Done",
+  };
+
+  const COLUMN_TONE = {
+    BACKLOG: "neutral",
+    READY_FOR_DEV: "primary",
+    IN_PROGRESS: "primary",
+    PENDING_BA: "warn",
+    PENDING_TL: "warn",
+    READY_FOR_QA: "info",
+    IN_DEV_FIX: "danger",
+    IN_RETEST: "info",
+    DONE: "ok",
+  };
+
+  /* status → next step. `alt` is the "send back" path. */
+  const FLOW = {
+    BACKLOG: { to: "READY_FOR_DEV", label: "Chuẩn bị Dev" },
+    READY_FOR_DEV: { to: "IN_PROGRESS", label: "Bắt đầu Dev" },
+    IN_PROGRESS: { to: "READY_FOR_QA", label: "Gửi QA" },
+    PENDING_BA: { to: "IN_PROGRESS", label: "Mở khóa → Dev" },
+    PENDING_TL: { to: "IN_PROGRESS", label: "Mở khóa → Dev" },
+    READY_FOR_QA: { to: "DONE", label: "Pass → Done", alt: { to: "IN_DEV_FIX", label: "Báo lỗi" } },
+    IN_DEV_FIX: { to: "IN_RETEST", label: "Đã sửa → Retest" },
+    IN_RETEST: { to: "DONE", label: "Pass → Done", alt: { to: "IN_DEV_FIX", label: "Lỗi lại" } },
+  };
+
+  const ROLES = [
+    { id: "ba", label: "BA" },
+    { id: "dev", label: "DEV" },
+    { id: "tester", label: "TESTER" },
+    { id: "tl", label: "TL" },
+  ];
+
+  const SPRINT_TARGETS = ["DONE", "DEV_DONE", "TECH_PLANNED"];
+  const MEMBER_STATUSES = ["Active", "Inactive"];
+
+  const TYPE_META = {
+    TICKET: { label: "Ticket", tone: "neutral" },
+    BUG: { label: "Bug", tone: "danger" },
+    QUESTION: { label: "Q&A", tone: "info" },
+    BACKLOG: { label: "Backlog", tone: "neutral" },
+  };
+
+  const THEME_MODES = ["auto", "light", "dark"];
+  const THEME_META = {
+    auto: { icon: "monitor", label: "Tự động" },
+    light: { icon: "sun", label: "Sáng" },
+    dark: { icon: "moon", label: "Tối" },
+  };
+
+  const CONN_TEXT = { static: "Xem tĩnh", connecting: "Đang kết nối", live: "Live", offline: "Mất kết nối" };
+
+  const TABS = [
+    { id: "board", label: "Board" },
+    { id: "sprint", label: "Sprint" },
+    { id: "team", label: "Team" },
+    { id: "retro", label: "Retro" },
+  ];
+
+  const DEFAULT_TEAM = [
+    { member: "@tl-1", name: "Tech Lead", role: "tl", capacitySp: 8, specialties: "Architecture, ADR, Shared UI", status: "Active" },
+    { member: "@ba-1", name: "Business Analyst", role: "ba", capacitySp: 10, specialties: "DDD, Spec, Slicing", status: "Active" },
+    { member: "@dev-1", name: "Developer 1", role: "dev", capacitySp: 13, specialties: "Fullstack, TDD", status: "Active" },
+    { member: "@qa-1", name: "QA Tester 1", role: "tester", capacitySp: 10, specialties: "Playwright E2E, Adversarial QA", status: "Active" },
+  ];
+
+  /* Texts are persisted verbatim into board/sprints/*.md — keep them stable. */
+  const RETRO_CATEGORIES = {
+    dev: [
+      "Spec & Domain Friction (Spec thiếu case biên / thuật ngữ DDD lệch)",
+      "Estimation Drift & Tech Bottlenecks (Lệch điểm DEV SP / nghẽn kiến trúc)",
+      "Shortcuts & Reusable Components (Có // shortcut: hoặc cần tách Shared Component)",
+      "Escaped Bug Root Cause (Bug lọt sang QA cần thêm Rule phòng ngừa)",
+      "Workflow & Agent Friction (Subagent / công cụ gây tốn vòng lặp)",
+    ],
+    tester: [
+      "First-Time Pass & Recurring Bugs (Ticket trượt QA vòng đầu / lỗi lặp lại)",
+      "Uncovered AC & Edge-Case Gaps (Kịch bản biên BA chưa liệt kê trong Spec)",
+      "Playwright Locator Health & Flakiness (Selector thiếu getByRole / data-testid)",
+      "QA Crunch & Seed Data (Thiếu e2e/seed.spec.ts hoặc dồn việc cuối Sprint)",
+      "QA Estimation Drift (Thực tế test tốn nhiều hơn QA SP dự kiến)",
+    ],
+  };
+
+  const ICONS = {
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    kanban: '<rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="4" height="15" rx="1"/>',
+    list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+    user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    sync: '<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-14.93 1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2m-14.93 7.07 1.41-1.41m11.32-11.32 1.41-1.41"/>',
+    moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+    monitor: '<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    chevronLeft: '<path d="m15 18-6-6 6-6"/>',
+    info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  };
+
+  /* ───────────────────────── state ───────────────────────── */
+  const EMPTY_STATE = {
+    columns: DEFAULT_COLUMNS,
+    items: [],
+    roster: [],
+    capacity: { sprintId: DEFAULT_SPRINT, members: [], rolloverQaTickets: [] },
+    activeSprint: DEFAULT_SPRINT,
+  };
+
+  const freshMemberDraft = () => ({
+    member: "", name: "", role: "dev", capacitySp: "10", specialties: "", status: "Active", err: {},
+  });
+
+  const S = {
+    data: window.__BOARD_STATE__ || EMPTY_STATE,
+    live: window.location.protocol.startsWith("http"),
+    conn: "static", // static | connecting | live | offline
+    tab: "board",
+    role: "dev",
+    member: "ALL",
+    f: { q: "", sprint: "ALL", type: "ALL" },
+    prefs: { view: "board", hideDone: false, collapseEmpty: true },
+    expanded: new Set(),
+    sel: null,
+    dragKey: null,
+    typing: false,
+    deferred: false,
+    focusAfter: null,
+    queue: [],
+    savedAt: null,
+    theme: "auto",
+    toastTimer: null,
+    draft: {
+      member: freshMemberDraft(),
+      retro: { member: "", role: "", tags: [], proposal: "", err: {} },
+    },
+  };
+
+  /* ───────────────────────── helpers ───────────────────────── */
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const byFk = (fk) => $$("[data-fk]").find((el) => el.dataset.fk === fk) || null;
+  const uniq = (list) => Array.from(new Set(list));
+  const cliQuote = (v) => JSON.stringify(String(v));
+
+  function esc(str) {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function ico(name) {
+    return `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
+  }
+
+  const items = () => S.data.items || [];
+  const columns = () => S.data.columns || DEFAULT_COLUMNS;
+  const roster = () => S.data.roster || [];
+  const activeSprint = () => S.data.activeSprint || DEFAULT_SPRINT;
+  const isWork = (it) => it.type === "TICKET" || it.type === "BUG";
+  const keyOf = (it) => `${it.type}|${it.slug}|${it.id}`;
+  const findByKey = (key) => items().find((it) => keyOf(it) === key) || null;
+  const findWork = (id) => items().find((it) => isWork(it) && it.id === id) || null;
+  const statusLabel = (s) => COLUMN_LABELS[s] || s;
+  /* titles arrive as "F-001-T01: Login…"; the id is already shown beside it */
+  const titleOf = (it) => {
+    const title = String(it.title || "");
+    const prefix = `${it.id}:`;
+    return (title.startsWith(prefix) ? title.slice(prefix.length).trim() : title) || it.id;
+  };
+  const isAssigned = (v) => Boolean(v) && v !== UNASSIGNED;
+  const personLabel = (v) => (isAssigned(v) ? v : "Chưa gán");
+
+  function sprintList() {
+    const others = uniq(items().map((it) => it.sprint || "BACKLOG").filter((s) => s !== activeSprint())).sort();
+    return [activeSprint(), ...others];
+  }
+
+  function peopleList(current) {
+    return uniq([UNASSIGNED, ...roster().map((m) => m.member), current || UNASSIGNED]);
+  }
+
+  function opts(list, current) {
+    return list
+      .map((o) => {
+        const [value, label] = Array.isArray(o) ? o : [o, o];
+        return `<option value="${esc(value)}"${value === current ? " selected" : ""}>${esc(label)}</option>`;
+      })
+      .join("");
+  }
+
+  const personOpts = (current) =>
+    opts(peopleList(current).map((m) => [m, personLabel(m)]), current || UNASSIGNED);
+
+  const badge = (text, tone = "neutral") => `<span class="badge badge--${tone}">${esc(text)}</span>`;
+  const typeBadge = (it) => {
+    const meta = TYPE_META[it.type] || TYPE_META.TICKET;
+    return badge(meta.label, meta.tone);
+  };
+  const statusBadge = (s) => badge(statusLabel(s), COLUMN_TONE[s] || "neutral");
+
+  /* ───────────────────────── rules (client mirror of Four-Eyes gate) ───────────────────────── */
+  function gate(item, to, role = S.role) {
+    const r = String(role || "dev").toLowerCase();
+    const target = String(to || "").toUpperCase();
+    const current = String(item.status || "").toUpperCase();
+    if ((target === "DONE" || target === "CLOSED") && r !== "tester") {
+      return `Four-Eyes Gate: chỉ TESTER được chuyển sang ${statusLabel(target)} (đang là ${r.toUpperCase()}).`;
+    }
+    if (current === "PENDING_BA" && target !== current && r !== "ba") {
+      return `Four-Eyes Gate: chỉ BA được mở khóa Pending BA (đang là ${r.toUpperCase()}).`;
+    }
+    if (current === "PENDING_TL" && target !== current && r !== "tl") {
+      return `Four-Eyes Gate: chỉ TL được mở khóa Pending TL (đang là ${r.toUpperCase()}).`;
+    }
+    return "";
+  }
+
+  const nextAction = (it) => (isWork(it) ? FLOW[it.status] || null : null);
+
+  /* ───────────────────────── persistence (view prefs only) ───────────────────────── */
+  function loadPrefs() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+      if (saved.view === "board" || saved.view === "list") S.prefs.view = saved.view;
+      if (typeof saved.hideDone === "boolean") S.prefs.hideDone = saved.hideDone;
+      if (typeof saved.collapseEmpty === "boolean") S.prefs.collapseEmpty = saved.collapseEmpty;
+    } catch (_) {
+      /* corrupted prefs → defaults */
+    }
+  }
+
+  function savePrefs() {
+    try {
+      localStorage.setItem(PREFS_KEY, JSON.stringify(S.prefs));
+    } catch (_) {
+      /* storage unavailable (private mode / file://) → prefs last for this page only */
+    }
+  }
+
+  function applyTheme(mode) {
+    S.theme = THEME_MODES.includes(mode) ? mode : "auto";
+    const root = document.documentElement;
+    if (S.theme === "auto") root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", S.theme);
+    try {
+      localStorage.setItem(THEME_KEY, S.theme);
+    } catch (_) {
+      /* see savePrefs */
+    }
+  }
+
+  /* ───────────────────────── toast / clipboard / saved-indicator ───────────────────────── */
+  function toast(text, type = "ok") {
+    clearTimeout(S.toastTimer);
+    const host = $("#r-toast");
+    if (!host) return;
+    host.innerHTML = `<div class="toast toast--${type}"><span>${esc(text)}</span><button type="button" class="btn btn--ghost btn--icon btn--sm" data-act="toast-close" aria-label="Đóng thông báo">${ico("close")}</button></div>`;
+    S.toastTimer = setTimeout(() => {
+      host.innerHTML = "";
+    }, TOAST_MS[type] || TOAST_MS.ok);
+  }
+
+  async function copyText(text, okMsg) {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast(okMsg);
+      return;
+    } catch (_) {
+      /* clipboard API blocked (e.g. file://) → legacy path */
+    }
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;opacity:0;top:0;left:0";
+    document.body.appendChild(ta);
+    ta.select();
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch (_) {
+      copied = false;
+    }
+    ta.remove();
+    toast(copied ? okMsg : "Không copy được — hãy chọn và copy thủ công.", copied ? "ok" : "err");
+  }
+
+  const markSaved = () => {
+    S.savedAt = new Date();
+  };
+  const savedLabel = () =>
+    S.savedAt ? `Đã lưu ${S.savedAt.toLocaleTimeString("vi-VN", { hour12: false })}` : "";
+
+  /* ───────────────────────── data layer ───────────────────────── */
+  const FIELD_FLAG = {
+    status: "status",
+    sprint: "sprint",
+    sprintTarget: "target",
+    devAssignee: "dev-assignee",
+    qaAssignee: "qa-assignee",
+    devSp: "dev-sp",
+    qaSp: "qa-sp",
+  };
+
+  function applyLocal(endpoint, payload) {
+    if (endpoint === API.assign) {
+      const it = findWork(payload.id);
+      if (!it) return;
+      for (const field of Object.keys(FIELD_FLAG)) {
+        if (payload[field] !== undefined) it[field] = payload[field];
+      }
+      it.totalSp = (it.devSp || 0) + (it.qaSp || 0);
+    } else if (endpoint === API.member) {
+      const list = roster();
+      const idx = list.findIndex((m) => m.member.toLowerCase() === payload.member.toLowerCase());
+      if (idx >= 0) list[idx] = { ...list[idx], ...payload };
+      else list.push({ ...payload });
+      S.data.roster = list;
+    }
+  }
+
+  async function send(endpoint, payload, cli) {
+    if (!S.live) {
+      if (cli) S.queue.push(cli);
+      applyLocal(endpoint, payload);
+      markSaved();
+      paint();
+      return { ok: true, local: true };
+    }
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) {
+        toast(data.error || `Server từ chối thao tác (${res.status}).`, "err");
+        paint(); // revert any control the user already changed
+        return { ok: false };
+      }
+      if (data.state) S.data = data.state;
+      if (data.role) S.role = data.role;
+      if (data.activeMember !== undefined) S.member = data.activeMember || "ALL";
+      markSaved();
+      paint();
+      return data;
+    } catch (err) {
+      toast(`Mất kết nối server: ${err.message}`, "err");
+      paint();
+      return { ok: false };
+    }
+  }
+
+  function patch(item, fields) {
+    const flags = Object.entries(fields)
+      .map(([k, v]) => `--${FIELD_FLAG[k]}=${cliQuote(v)}`)
+      .join(" ");
+    return send(
+      API.assign,
+      { id: item.id, ...fields },
+      `${CLI} assign --id=${cliQuote(item.id)} ${flags} --role=${S.role}`
+    );
+  }
+
+  async function move(item, to) {
+    if (!item || item.status === to) return;
+    const why = gate(item, to);
+    if (why) {
+      toast(why, "err");
+      paint();
+      return;
+    }
+    const res = await patch(item, { status: to });
+    if (res.ok) toast(`${item.id} → ${statusLabel(to)}`);
+  }
+
+  async function fetchState() {
+    try {
+      const res = await fetch(API.state);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.state) S.data = data.state;
+      if (data.role) S.role = data.role;
+      if (data.activeMember) S.member = data.activeMember;
+    } catch (_) {
+      /* keep embedded state */
+    }
+  }
+
+  function connectEvents() {
+    if (typeof EventSource === "undefined") return;
+    const es = new EventSource(API.events);
+    es.addEventListener("state", (ev) => {
+      try {
+        S.data = JSON.parse(ev.data);
+        paint();
+      } catch (_) {
+        /* ignore malformed payload */
+      }
+    });
+    es.onopen = async () => {
+      S.conn = "live";
+      await fetchState(); // resync anything missed while disconnected
+      paint();
+    };
+    es.onerror = () => {
+      S.conn = "offline";
+      paint();
+    };
+  }
+
+  /* ───────────────────────── views: shared ───────────────────────── */
+  function moveButtons(it) {
+    const na = nextAction(it);
+    if (!na) return "";
+    const one = (a, cls) => {
+      const why = gate(it, a.to);
+      return `<button type="button" class="btn btn--sm ${why ? "btn--locked" : cls}" data-act="move" data-k="${esc(keyOf(it))}" data-to="${a.to}"${why ? ' aria-disabled="true"' : ""} title="${esc(why || `Chuyển sang ${statusLabel(a.to)}`)}">${ico(why ? "lock" : "arrow")}<span>${esc(a.label)}</span></button>`;
+    };
+    return one(na, "btn--primary") + (na.alt ? one(na.alt, "btn--danger-outline") : "");
+  }
+
+  function dorBadge(it) {
+    const sp = it.totalSp || 0;
+    if (sp >= SP_SPLIT_THRESHOLD) return badge(`Nên tách (≥ ${SP_SPLIT_THRESHOLD} SP)`, "danger");
+    if (sp === 0) return badge("Chưa ước lượng", "warn");
+    return badge("OK", "ok");
+  }
+
+  function emptyState(title, body, actions = "") {
+    return `<div class="empty"><h3>${esc(title)}</h3><p>${body}</p><div class="row row--center">${actions}</div></div>`;
+  }
+
+  /* ───────────────────────── views: chrome ───────────────────────── */
+  function viewTop() {
+    const counts = {
+      board: items().length,
+      sprint: items().filter(isWork).length,
+      team: roster().length,
+    };
+    const theme = THEME_META[S.theme];
+    const memberOptions = opts(
+      [["ALL", "Tất cả"], ...roster().map((m) => [m.member, `${m.member} (${m.role})`])],
+      S.member
+    );
+    return `
+      <div class="brand">
+        <span class="brand__logo">${ico("kanban")}</span>
+        <strong class="brand__name">AI Studio Board</strong>
+        ${badge(activeSprint(), "primary")}
+      </div>
+      <nav class="tabs" aria-label="Điều hướng Board">
+        ${TABS.map(
+          (t) => `<button type="button" class="tab" data-act="tab" data-tab="${t.id}" data-fk="tab:${t.id}"${S.tab === t.id ? ' aria-current="page"' : ""}>${t.label}${counts[t.id] !== undefined ? `<span class="tab__count">${counts[t.id]}</span>` : ""}</button>`
+        ).join("")}
+      </nav>
+      <div class="tools">
+        <label class="inline-field" title="Lọc việc của một thành viên (/my-tasks)">
+          <span>Việc của</span>
+          <select class="select" data-filter="member" data-fk="top:member">${memberOptions}</select>
+        </label>
+        <label class="inline-field" title="Vai trò dùng để kiểm tra Four-Eyes Gate khi chuyển trạng thái">
+          <span>Vai trò</span>
+          <select class="select" data-filter="role" data-fk="top:role">${opts(ROLES.map((r) => [r.id, r.label]), S.role)}</select>
+        </label>
+        <span class="conn conn--${S.conn}"><span class="conn__dot" aria-hidden="true"></span>${CONN_TEXT[S.conn]}${S.savedAt ? ` · ${esc(savedLabel())}` : ""}</span>
+        <button type="button" class="btn btn--icon" data-act="theme" data-fk="top:theme" aria-label="Giao diện: ${theme.label}. Nhấn để đổi" title="Giao diện: ${theme.label}">${ico(theme.icon)}</button>
+      </div>`;
+  }
+
+  const viewLists = () =>
+    `<datalist id="dl-sprints">${sprintList().map((s) => `<option value="${esc(s)}"></option>`).join("")}</datalist><datalist id="dl-members">${roster().map((m) => `<option value="${esc(m.member)}"></option>`).join("")}</datalist>`;
+
+  function viewBanner() {
+    if (S.live) return "";
+    const queued = S.queue.length
+      ? `<span>${S.queue.length} thay đổi chờ ghi vào file</span><button type="button" class="btn btn--sm btn--primary" data-act="copy-queue">${ico("copy")} Copy lệnh đồng bộ</button>`
+      : "";
+    return `<div class="banner">${ico("info")}<span>Chế độ xem tĩnh: thay đổi chỉ tồn tại trong trang này. Chạy <code>${CLI} --ui</code> để ghi trực tiếp.</span>${queued}</div>`;
+  }
+
+  /* ───────────────────────── views: board tab ───────────────────────── */
+  function visibleItems() {
+    const q = S.f.q.trim().toLowerCase();
+    return items().filter((it) => {
+      if (S.prefs.hideDone && (it.status === "DONE" || it.status === "CLOSED")) return false;
+      if (S.member !== "ALL" && it.devAssignee !== S.member && it.qaAssignee !== S.member) return false;
+      if (S.f.sprint !== "ALL" && (it.sprint || "BACKLOG") !== S.f.sprint) return false;
+      if (S.f.type !== "ALL" && it.type !== S.f.type) return false;
+      if (q) {
+        const hay = `${it.id} ${it.title} ${it.slug} ${it.devAssignee || ""} ${it.qaAssignee || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  const hasFilter = () =>
+    S.f.q.trim() !== "" || S.member !== "ALL" || S.f.sprint !== "ALL" || S.f.type !== "ALL" || S.prefs.hideDone;
+
+  function countHtml() {
+    return `Hiển thị <strong>${visibleItems().length}</strong> / ${items().length} mục`;
+  }
+
+  function viewMine() {
+    if (S.member === "ALL") return "";
+    const mine = items().filter((it) => it.devAssignee === S.member || it.qaAssignee === S.member);
+    const escalations = mine.filter((it) => it.status === "PENDING_BA" || it.status === "PENDING_TL").length;
+    const bugs = mine.filter((it) => it.type === "BUG" || it.status === "IN_DEV_FIX" || it.status === "IN_RETEST").length;
+    const active = mine.filter((it) => ["IN_PROGRESS", "READY_FOR_DEV", "READY_FOR_QA"].includes(it.status)).length;
+    const cap = ((S.data.capacity && S.data.capacity.members) || []).find(
+      (m) => m.member.toLowerCase() === S.member.toLowerCase()
+    );
+    let cmd = `/my-tasks ${S.member}`;
+    if (mine.some((it) => it.status === "IN_DEV_FIX")) cmd = "/diagnosing-bugs";
+    else if (mine.some((it) => it.status === "READY_FOR_QA" && it.qaAssignee === S.member)) cmd = "/qa-verify";
+    else if (mine.some((it) => it.status === "READY_FOR_DEV" && it.devAssignee === S.member)) cmd = "/implement";
+    return `
+      <section class="mine" aria-label="Việc của ${esc(S.member)}">
+        <span class="mine__who">${ico("user")}<strong>${esc(S.member)}</strong></span>
+        <span class="mine__stat">Tải sprint <strong>${cap ? `${cap.assignedSp}/${cap.capacitySp} SP` : "—"}</strong></span>
+        <span class="mine__stat">Đang làm <strong>${active}</strong></span>
+        <span class="mine__stat">Escalation <strong>${escalations}</strong></span>
+        <span class="mine__stat">Bug <strong>${bugs}</strong></span>
+        <span class="mine__stat">Tổng <strong>${mine.length}</strong></span>
+        <span class="mine__cmd">Gợi ý <code>${esc(cmd)}</code><button type="button" class="btn btn--ghost btn--icon btn--sm" data-act="copy" data-text="${esc(cmd)}" data-msg="Đã copy ${esc(cmd)}" aria-label="Copy lệnh ${esc(cmd)}">${ico("copy")}</button></span>
+      </section>`;
+  }
+
+  function viewToolbar() {
+    const sprintOpts = opts([["ALL", "Mọi sprint"], ...sprintList().map((s) => [s, s])], S.f.sprint);
+    const typeOpts = opts(
+      [["ALL", "Mọi loại"], ["TICKET", "Ticket"], ["BUG", "Bug"], ["QUESTION", "Q&A"], ["BACKLOG", "Backlog"]],
+      S.f.type
+    );
+    const seg = (id, label, icon) =>
+      `<button type="button" class="seg__btn" data-act="view" data-view="${id}" data-fk="tb:view-${id}" aria-pressed="${S.prefs.view === id}">${ico(icon)}<span>${label}</span></button>`;
+    return `
+      <div class="toolbar">
+        <label class="search">
+          ${ico("search")}
+          <input type="search" class="input" data-filter="q" data-fk="tb:q" placeholder="Tìm mã, tiêu đề, @thành-viên…" aria-label="Tìm kiếm (phím tắt /)" value="${esc(S.f.q)}" autocomplete="off" />
+          <kbd aria-hidden="true">/</kbd>
+        </label>
+        <select class="select" data-filter="sprint" data-fk="tb:sprint" aria-label="Lọc theo sprint">${sprintOpts}</select>
+        <select class="select" data-filter="type" data-fk="tb:type" aria-label="Lọc theo loại">${typeOpts}</select>
+        <label class="check"><input type="checkbox" data-pref="hideDone" data-fk="tb:hideDone"${S.prefs.hideDone ? " checked" : ""} /> Ẩn Done</label>
+        ${
+          S.prefs.view === "board"
+            ? `<label class="check" title="Cột không có thẻ thu thành thanh hẹp"><input type="checkbox" data-pref="collapseEmpty" data-fk="tb:collapse"${S.prefs.collapseEmpty ? " checked" : ""} /> Thu gọn cột trống</label>`
+            : ""
+        }
+        <span class="toolbar__count" id="k-count">${countHtml()}</span>
+        ${hasFilter() ? `<button type="button" class="btn btn--sm btn--ghost" data-act="reset-filters" data-fk="tb:reset">Xóa lọc</button>` : ""}
+        <div class="seg" role="group" aria-label="Kiểu hiển thị">${seg("board", "Bảng", "kanban")}${seg("list", "Danh sách", "list")}</div>
+      </div>`;
+  }
+
+  function viewCard(it) {
+    const work = isWork(it);
+    const k = esc(keyOf(it));
+    const sp = it.totalSp || 0;
+    const meta = work
+      ? `<div class="card__meta">
+           <span class="who${isAssigned(it.devAssignee) ? "" : " who--none"}" title="Dev"><b>DEV</b> ${esc(personLabel(it.devAssignee))}</span>
+           <span class="who${isAssigned(it.qaAssignee) ? "" : " who--none"}" title="QA"><b>QA</b> ${esc(personLabel(it.qaAssignee))}</span>
+           ${badge(`${it.sprint || "BACKLOG"} · ${it.sprintTarget || "DONE"}`)}
+         </div>`
+      : `<div class="card__meta"><span class="muted">${esc(it.file || "")}</span></div>`;
+    const actions = moveButtons(it);
+    return `
+      <article class="card${work ? "" : " card--readonly"}" data-k="${k}"${work ? ' draggable="true"' : ""}>
+        <div class="card__top">
+          <button type="button" class="id-link" data-act="open" data-k="${k}" data-fk="open:${k}">${esc(it.id)}</button>
+          <span class="spacer"></span>
+          ${sp >= SP_SPLIT_THRESHOLD && work ? badge("Nên tách", "danger") : ""}
+          ${work ? badge(`${sp} SP`) : typeBadge(it)}
+        </div>
+        <button type="button" class="card__title" data-act="open" data-k="${k}" title="${esc(titleOf(it))}">${esc(titleOf(it))}</button>
+        ${meta}
+        ${actions ? `<div class="card__actions">${actions}</div>` : ""}
+      </article>`;
+  }
+
+  function viewColumn(col, list) {
+    const its = list.filter((it) => it.status === col);
+    const label = statusLabel(col);
+    const tone = COLUMN_TONE[col] || "neutral";
+    const collapsed = S.prefs.collapseEmpty && its.length === 0 && !S.expanded.has(col);
+    if (collapsed) {
+      return `<button type="button" class="kcol kcol--rail tone-${tone}" data-col="${col}" data-act="expand" data-fk="col:${col}" aria-label="${esc(label)}: trống. Mở rộng cột"><span class="kcol__rail-label">${esc(label)}</span><span class="count">0</span></button>`;
+    }
+    const collapseBtn = its.length === 0 && S.prefs.collapseEmpty
+      ? `<button type="button" class="btn btn--ghost btn--icon btn--sm" data-act="collapse" data-col="${col}" data-fk="col:${col}" aria-label="Thu gọn cột ${esc(label)}">${ico("chevronLeft")}</button>`
+      : "";
+    return `
+      <section class="kcol tone-${tone}" data-col="${col}" aria-label="${esc(label)}">
+        <header class="kcol__head"><h2>${esc(label)}</h2><span class="count">${its.length}</span>${collapseBtn}</header>
+        <div class="kcol__body">${its.length ? its.map(viewCard).join("") : `<p class="kcol__empty">Kéo thẻ vào đây</p>`}</div>
+      </section>`;
+  }
+
+  function viewKanban(list) {
+    const cols = columns().filter((c) => !(S.prefs.hideDone && c === "DONE"));
+    return `<div class="kgrid">${cols.map((c) => viewColumn(c, list)).join("")}</div>`;
+  }
+
+  function viewList(list) {
+    const rows = list
+      .map((it) => {
+        const k = esc(keyOf(it));
+        const work = isWork(it);
+        return `
+        <tr>
+          <td class="nowrap"><button type="button" class="id-link" data-act="open" data-k="${k}" data-fk="open:${k}">${esc(it.id)}</button> ${typeBadge(it)}</td>
+          <td class="cell-title"><button type="button" class="link" data-act="open" data-k="${k}">${esc(titleOf(it))}</button></td>
+          <td class="nowrap">${esc(it.sprint || "BACKLOG")}</td>
+          <td class="nowrap">${work ? `${esc(personLabel(it.devAssignee))} / ${esc(personLabel(it.qaAssignee))}` : "—"}</td>
+          <td class="nowrap">${work ? `<strong>${it.totalSp || 0} SP</strong> <span class="muted">(${it.devSp || 0}/${it.qaSp || 0})</span>` : "—"}</td>
+          <td>${work ? `<select class="select select--sm" data-edit="status" data-id="${esc(it.id)}" data-fk="l:${k}:status" aria-label="Trạng thái của ${esc(it.id)}">${opts(columns().map((c) => [c, statusLabel(c)]), it.status)}</select>` : statusBadge(it.status)}</td>
+          <td><div class="row">${moveButtons(it)}</div></td>
+        </tr>`;
+      })
+      .join("");
+    return `
+      <div class="tablewrap">
+        <table class="tbl">
+          <thead><tr><th>Mã</th><th>Tiêu đề</th><th>Sprint</th><th>DEV / QA</th><th>Điểm</th><th>Trạng thái</th><th>Bước tiếp</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  function viewBoardBody() {
+    if (items().length === 0) {
+      return emptyState(
+        "Board chưa có ticket hoặc bug",
+        `Khởi tạo đội ngũ ở tab <strong>Team</strong>, rồi chạy <code>/plan-feature</code> để BA tạo spec và cắt ticket vào <code>board/features/</code>.`,
+        `<button type="button" class="btn btn--primary" data-act="tab" data-tab="team">Mở tab Team</button>
+         <button type="button" class="btn" data-act="copy" data-text="/plan-feature " data-msg="Đã copy /plan-feature">${ico("copy")} Copy /plan-feature</button>`
+      );
+    }
+    const list = visibleItems();
+    if (list.length === 0) {
+      return emptyState(
+        "Không có mục nào khớp bộ lọc",
+        `Đổi từ khóa hoặc xóa bộ lọc để xem lại toàn bộ ${items().length} mục.`,
+        `<button type="button" class="btn btn--primary" data-act="reset-filters">Xóa tất cả bộ lọc</button>`
+      );
+    }
+    return S.prefs.view === "list" ? viewList(list) : viewKanban(list);
+  }
+
+  const viewBoardTab = () =>
+    `${viewMine()}${viewToolbar()}<div id="k-body" class="k-body">${viewBoardBody()}</div>`;
+
+  /* ───────────────────────── views: sprint tab ───────────────────────── */
+  function viewSprint() {
+    const cap = S.data.capacity || {};
+    const members = cap.members || [];
+    const rollover = cap.rolloverQaTickets || [];
+    const STATUS_TEXT = { OK: ["Ổn", "ok"], WARN: ["Gần đầy", "warn"], OVER_CAPACITY: ["Quá tải", "danger"] };
+    const capHtml = members.length
+      ? members
+          .map((m) => {
+            const real = m.capacitySp > 0 ? Math.round((m.assignedSp / m.capacitySp) * 100) : 0;
+            const [text, tone] = STATUS_TEXT[m.status] || [m.status, "neutral"];
+            return `
+            <div class="cap">
+              <div class="cap__head"><strong>${esc(m.member)}</strong><span class="muted">${esc(m.name || "")} · ${esc(m.role)}</span><span class="spacer"></span>${badge(`${text} · ${m.assignedSp}/${m.capacitySp} SP`, tone)}</div>
+              <div class="bar" role="progressbar" aria-label="Tải của ${esc(m.member)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(real, 100)}" aria-valuetext="${real}%"><div class="bar__fill bar__fill--${tone}" style="width:${Math.min(real, 100)}%"></div></div>
+            </div>`;
+          })
+          .join("")
+      : `<p class="muted">Chưa có thành viên. Thêm ở tab <strong>Team</strong> trước.</p>`;
+
+    const rows = items()
+      .filter(isWork)
+      .map((it) => {
+        const k = esc(keyOf(it));
+        const id = esc(it.id);
+        const fk = (field) => `r:${id}:${field}`;
+        return `
+        <tr>
+          <td class="nowrap"><button type="button" class="id-link" data-act="open" data-k="${k}" data-fk="open:${k}">${id}</button><div class="muted small">${esc(it.slug)}</div></td>
+          <td class="cell-title">${esc(titleOf(it))}</td>
+          <td><input class="input input--sm" list="dl-sprints" data-edit="sprint" data-id="${id}" data-fk="${fk("sprint")}" value="${esc(it.sprint || DEFAULT_SPRINT)}" aria-label="Sprint của ${id}" /></td>
+          <td><select class="select select--sm" data-edit="devAssignee" data-id="${id}" data-fk="${fk("devAssignee")}" aria-label="Dev của ${id}">${personOpts(it.devAssignee)}</select></td>
+          <td><select class="select select--sm" data-edit="qaAssignee" data-id="${id}" data-fk="${fk("qaAssignee")}" aria-label="QA của ${id}">${personOpts(it.qaAssignee)}</select></td>
+          <td><select class="select select--sm" data-edit="sprintTarget" data-id="${id}" data-fk="${fk("sprintTarget")}" aria-label="Sprint target của ${id}">${opts(SPRINT_TARGETS, it.sprintTarget || "DONE")}</select></td>
+          <td><input type="number" min="0" step="0.5" class="input input--sm input--num" data-edit="devSp" data-id="${id}" data-fk="${fk("devSp")}" value="${it.devSp || 0}" aria-label="DEV SP của ${id}" /></td>
+          <td><input type="number" min="0" step="0.5" class="input input--sm input--num" data-edit="qaSp" data-id="${id}" data-fk="${fk("qaSp")}" value="${it.qaSp || 0}" aria-label="QA SP của ${id}" /></td>
+          <td class="nowrap"><strong>${it.totalSp || 0} SP</strong> ${dorBadge(it)}</td>
+        </tr>`;
+      })
+      .join("");
+
+    return `
+      <section class="panel">
+        <header class="panel__head">
+          <h2>Capacity · ${esc(activeSprint())}</h2>
+          <button type="button" class="btn btn--primary" data-act="sync-sprint" data-fk="sp:sync">${ico("sync")} Đồng bộ vào board/sprints/${esc(activeSprint())}.md</button>
+        </header>
+        <div class="cap-grid">${capHtml}</div>
+        ${rollover.length ? `<p class="note note--warn"><strong>QA rollover sang sprint sau (target DEV_DONE):</strong> ${esc(rollover.join(", "))}</p>` : ""}
+      </section>
+      <section class="panel">
+        <header class="panel__head">
+          <h2>Phân công &amp; ước lượng</h2>
+          <span class="muted">Tự lưu khi chọn hoặc rời ô nhập</span>
+        </header>
+        <div class="tablewrap tablewrap--inline">
+          <table class="tbl">
+            <thead><tr><th>Ticket</th><th>Tiêu đề</th><th>Sprint</th><th>Dev</th><th>QA</th><th>Target</th><th>DEV SP</th><th>QA SP</th><th>Tổng / DoR</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="9" class="empty-cell">Chưa có ticket nào trong <code>board/features/*/tickets/</code>. Chạy <code>/plan-feature</code> trước.</td></tr>`}</tbody>
+          </table>
+        </div>
+        <p class="note"><code>DONE</code> tính DEV + QA SP · <code>DEV_DONE</code> chỉ tính DEV SP, QA SP chuyển sang sprint sau · <code>TECH_PLANNED</code> tính 20% DEV SP.</p>
+      </section>`;
+  }
+
+  /* ───────────────────────── views: team tab ───────────────────────── */
+  const fieldErr = (form, field) => {
+    const msg = S.draft[form].err[field];
+    return msg ? `<p class="field__err" id="err-${form}-${field}">${esc(msg)}</p>` : "";
+  };
+  const invalidAttrs = (form, field) =>
+    S.draft[form].err[field] ? ` aria-invalid="true" aria-describedby="err-${form}-${field}"` : "";
+
+  function viewTeam() {
+    const d = S.draft.member;
+    const rows = roster()
+      .map(
+        (m) => `
+        <tr>
+          <td><strong>${esc(m.member)}</strong></td>
+          <td>${esc(m.name)}</td>
+          <td>${badge(m.role.toUpperCase(), "primary")}</td>
+          <td><strong>${m.capacitySp} SP</strong></td>
+          <td>${esc(m.specialties)}</td>
+          <td>${badge(m.status, m.status === "Active" ? "ok" : "neutral")}</td>
+          <td><button type="button" class="btn btn--sm" data-act="edit-member" data-member="${esc(m.member)}" aria-label="Sửa ${esc(m.member)}">Sửa</button></td>
+        </tr>`
+      )
+      .join("");
+    const input = (field, label, extra = "") =>
+      `<label class="field"><span>${label}</span><input class="input" data-form="member" data-field="${field}" data-fk="m:${field}" value="${esc(d[field])}"${invalidAttrs("member", field)} ${extra} />${fieldErr("member", field)}</label>`;
+    return `
+      <section class="panel">
+        <header class="panel__head">
+          <h2>Thêm / cập nhật thành viên</h2>
+          <button type="button" class="btn" data-act="seed-team" data-fk="m:seed">${ico("plus")} Thêm 4 role mẫu</button>
+        </header>
+        <form class="form-grid" data-submit="member" novalidate>
+          ${input("member", "Mã thành viên", 'placeholder="@dev-1" autocomplete="off" required')}
+          ${input("name", "Họ tên", 'placeholder="Minh" autocomplete="off"')}
+          <label class="field"><span>Vai trò</span><select class="select" data-form="member" data-field="role" data-fk="m:role">${opts(ROLES.map((r) => [r.id, r.label]), d.role)}</select></label>
+          ${input("capacitySp", "Capacity (SP / sprint)", 'type="number" min="1" max="100" step="0.5"')}
+          ${input("specialties", "Chuyên môn", 'placeholder="Backend, Playwright…" autocomplete="off"')}
+          <label class="field"><span>Trạng thái</span><select class="select" data-form="member" data-field="status" data-fk="m:status">${opts(uniq([...MEMBER_STATUSES, d.status]), d.status)}</select></label>
+          <div class="field field--action"><button type="submit" class="btn btn--primary">Lưu vào TEAM.md</button></div>
+        </form>
+      </section>
+      <section class="panel">
+        <header class="panel__head"><h2>Thành viên hiện tại</h2></header>
+        <div class="tablewrap tablewrap--inline">
+          <table class="tbl">
+            <thead><tr><th>Member</th><th>Tên</th><th>Role</th><th>Capacity</th><th>Chuyên môn</th><th>Trạng thái</th><th></th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="7" class="empty-cell">Chưa có thành viên. Nhấn <strong>Thêm 4 role mẫu</strong> để bắt đầu.</td></tr>`}</tbody>
+          </table>
+        </div>
+      </section>`;
+  }
+
+  /* ───────────────────────── views: retro tab ───────────────────────── */
+  const retroRole = () => S.draft.retro.role || (S.role === "tester" ? "tester" : "dev");
+  const retroMember = () => S.draft.retro.member || (S.member !== "ALL" ? S.member : "");
+
+  function viewRetro() {
+    const d = S.draft.retro;
+    const role = retroRole();
+    const sprint = activeSprint();
+    const checks = RETRO_CATEGORIES[role]
+      .map(
+        (c, i) =>
+          `<label class="check check--block"><input type="checkbox" data-form="retro" data-field="tags" data-fk="rt:tag-${i}" value="${esc(c)}"${d.tags.includes(c) ? " checked" : ""} /> <span>${esc(c)}</span></label>`
+      )
+      .join("");
+    return `
+      <section class="panel panel--narrow">
+        <header class="panel__head"><h2>Retro · ${esc(sprint)}</h2></header>
+        <p class="note">Ghi điểm nghẽn và đề xuất cải tiến vào <code>board/sprints/${esc(sprint)}.md</code>.</p>
+        <form class="stack" data-submit="retro" novalidate>
+          <div class="form-grid form-grid--2">
+            <label class="field"><span>Người báo cáo</span><input class="input" list="dl-members" data-form="retro" data-field="member" data-fk="rt:member" value="${esc(retroMember())}" placeholder="@dev-1" autocomplete="off"${invalidAttrs("retro", "member")} />${fieldErr("retro", "member")}</label>
+            <label class="field"><span>Nhóm báo cáo</span><select class="select" data-form="retro" data-field="role" data-fk="rt:role" data-rerender>${opts([["dev", "4.1 DEV Retro"], ["tester", "4.2 TESTER Retro"]], role)}</select></label>
+          </div>
+          <fieldset class="fieldset"><legend>Điểm nghẽn gặp phải</legend>${checks}</fieldset>
+          <label class="field"><span>Đề xuất cải tiến (1 dòng)</span><input class="input" data-form="retro" data-field="proposal" data-fk="rt:proposal" value="${esc(d.proposal)}" autocomplete="off"${invalidAttrs("retro", "proposal")} />${fieldErr("retro", "proposal")}</label>
+          <div><button type="submit" class="btn btn--primary">Gửi vào ${esc(sprint)}.md</button></div>
+        </form>
+      </section>`;
+  }
+
+  /* ───────────────────────── views: drawer ───────────────────────── */
+  function viewDrawer() {
+    const it = S.sel && findByKey(S.sel);
+    if (!it) return "";
+    const work = isWork(it);
+    const id = esc(it.id);
+    const field = (label, html) => `<div class="field"><span>${label}</span>${html}</div>`;
+    const na = moveButtons(it);
+    const form = work
+      ? `
+        ${na ? `<div class="next"><span>Bước tiếp theo</span><div class="row">${na}</div></div>` : ""}
+        <div class="form-grid form-grid--2">
+          ${field("Trạng thái", `<select class="select" data-edit="status" data-id="${id}" data-fk="d:status" aria-label="Trạng thái">${opts(columns().map((c) => [c, statusLabel(c)]), it.status)}</select>`)}
+          ${field("Sprint", `<input class="input" list="dl-sprints" data-edit="sprint" data-id="${id}" data-fk="d:sprint" value="${esc(it.sprint || DEFAULT_SPRINT)}" aria-label="Sprint" />`)}
+          ${field("Dev", `<select class="select" data-edit="devAssignee" data-id="${id}" data-fk="d:devAssignee" aria-label="Dev">${personOpts(it.devAssignee)}</select>`)}
+          ${field("QA", `<select class="select" data-edit="qaAssignee" data-id="${id}" data-fk="d:qaAssignee" aria-label="QA">${personOpts(it.qaAssignee)}</select>`)}
+          ${field("Sprint target", `<select class="select" data-edit="sprintTarget" data-id="${id}" data-fk="d:sprintTarget" aria-label="Sprint target">${opts(SPRINT_TARGETS, it.sprintTarget || "DONE")}</select>`)}
+          ${field(`DEV SP / QA SP · tổng ${it.totalSp || 0}`, `<div class="row"><input type="number" min="0" step="0.5" class="input input--num" data-edit="devSp" data-id="${id}" data-fk="d:devSp" value="${it.devSp || 0}" aria-label="DEV SP" /><span aria-hidden="true">/</span><input type="number" min="0" step="0.5" class="input input--num" data-edit="qaSp" data-id="${id}" data-fk="d:qaSp" value="${it.qaSp || 0}" aria-label="QA SP" /></div>`)}
+        </div>`
+      : `<p class="note">Mục này chỉ đọc trên Board — chỉnh sửa trong file Markdown.</p>`;
+    return `
+      <div class="scrim" data-act="scrim">
+        <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title">
+          <header class="drawer__head">
+            <div class="drawer__heading">
+              <div class="row">${typeBadge(it)}<strong>${id}</strong>${statusBadge(it.status)}${work ? dorBadge(it) : ""}</div>
+              <h2 id="dr-title">${esc(titleOf(it))}</h2>
+            </div>
+            <button type="button" class="btn btn--icon" data-act="close-drawer" data-fk="d:close" aria-label="Đóng chi tiết">${ico("close")}</button>
+          </header>
+          <div class="drawer__body">
+            <div class="pathbar"><code>${esc(it.file || "")}</code><button type="button" class="btn btn--sm" data-act="copy" data-text="${esc(it.file || "")}" data-msg="Đã copy đường dẫn">${ico("copy")} Copy path</button></div>
+            ${form}
+            <section>
+              <h3 class="eyebrow">Nội dung file</h3>
+              <pre class="md">${esc(it.body || "Chưa có nội dung chi tiết.")}</pre>
+            </section>
+          </div>
+          <footer class="drawer__foot"><span class="muted">${work ? "Thay đổi được lưu ngay khi chọn hoặc rời ô nhập." : ""}</span><span class="muted">${esc(savedLabel())}</span></footer>
+        </aside>
+      </div>`;
+  }
+
+  /* ───────────────────────── paint ───────────────────────── */
+  const VIEWS = { board: viewBoardTab, sprint: viewSprint, team: viewTeam, retro: viewRetro };
+
+  function snapshot() {
+    const a = document.activeElement;
+    let start = null;
+    let end = null;
+    try {
+      if (a && typeof a.selectionStart === "number") {
+        start = a.selectionStart;
+        end = a.selectionEnd;
+      }
+    } catch (_) {
+      /* number inputs expose no selection */
+    }
+    return {
+      fk: a && a.dataset ? a.dataset.fk || null : null,
+      start,
+      end,
+      win: window.scrollY,
+      main: $("#r-main") ? $("#r-main").scrollTop : 0,
+      grid: $(".kgrid") ? $(".kgrid").scrollLeft : 0,
+      cols: $$(".kcol__body").map((el) => [el.closest(".kcol").dataset.col, el.scrollTop]),
+      body: $("#k-body") ? $("#k-body").scrollTop : 0,
+      drawer: $(".drawer__body") ? $(".drawer__body").scrollTop : 0,
+    };
+  }
+
+  function restore(snap) {
+    window.scrollTo(0, snap.win);
+    if ($("#r-main")) $("#r-main").scrollTop = snap.main;
+    if ($(".kgrid")) $(".kgrid").scrollLeft = snap.grid;
+    if ($("#k-body")) $("#k-body").scrollTop = snap.body;
+    for (const [col, top] of snap.cols) {
+      const body = $(`.kcol[data-col="${col}"] .kcol__body`);
+      if (body) body.scrollTop = top;
+    }
+    if ($(".drawer__body")) $(".drawer__body").scrollTop = snap.drawer;
+    const fk = S.focusAfter || snap.fk;
+    const sameFocus = fk === snap.fk;
+    S.focusAfter = null;
+    const target = fk && byFk(fk);
+    if (target) {
+      target.focus({ preventScroll: true });
+      if (sameFocus && snap.start !== null && typeof target.setSelectionRange === "function") {
+        try {
+          target.setSelectionRange(snap.start, snap.end);
+        } catch (_) {
+          /* non-text input */
+        }
+      }
+    }
+  }
+
+  function paint() {
+    if (S.typing || S.dragKey) {
+      S.deferred = true;
+      return;
+    }
+    S.deferred = false;
+    if (S.sel && !findByKey(S.sel)) S.sel = null;
+    const snap = snapshot();
+    const drawerOpen = Boolean(S.sel);
+    $("#r-top").innerHTML = viewTop();
+    $("#r-banner").innerHTML = viewBanner();
+    $("#r-lists").innerHTML = viewLists();
+    const main = $("#r-main");
+    main.className = `main main--${S.tab}${S.tab === "board" ? ` main--${S.prefs.view}` : ""}`;
+    main.innerHTML = VIEWS[S.tab]();
+    $("#r-drawer").innerHTML = viewDrawer();
+    for (const id of ["r-top", "r-banner", "r-main"]) $(`#${id}`).toggleAttribute("inert", drawerOpen);
+    restore(snap);
+  }
+
+  /* only the board body + count (search typing must not rebuild the toolbar) */
+  function paintBody() {
+    const snap = snapshot();
+    $("#k-body").innerHTML = viewBoardBody();
+    $("#k-count").innerHTML = countHtml();
+    restore(snap);
+  }
+
+  /* ───────────────────────── actions ───────────────────────── */
+  function openDrawer(key) {
+    S.sel = key;
+    S.focusAfter = "d:close";
+    paint();
+  }
+
+  function closeDrawer() {
+    if (!S.sel) return;
+    S.focusAfter = `open:${S.sel}`;
+    S.sel = null;
+    paint();
+  }
+
+  function setMember(member) {
+    S.member = member;
+    if (S.live) send(API.active, { member: member === "ALL" ? "" : member });
+    else paint();
+  }
+
+  function resetFilters() {
+    S.f = { q: "", sprint: "ALL", type: "ALL" };
+    S.prefs.hideDone = false;
+    savePrefs();
+    if (S.member !== "ALL") setMember("ALL");
+    else paint();
+  }
+
+  function saveMember(m) {
+    return send(
+      API.member,
+      m,
+      `${CLI} member ${cliQuote(m.member)} --name=${cliQuote(m.name)} --role=${m.role} --capacity=${m.capacitySp} --specialties=${cliQuote(m.specialties)} --status=${cliQuote(m.status)}`
+    );
+  }
+
+  const ACT = {
+    tab: (el) => {
+      S.tab = el.dataset.tab;
+      paint();
+    },
+    theme: () => {
+      applyTheme(THEME_MODES[(THEME_MODES.indexOf(S.theme) + 1) % THEME_MODES.length]);
+      paint();
+    },
+    view: (el) => {
+      S.prefs.view = el.dataset.view;
+      savePrefs();
+      paint();
+    },
+    open: (el) => openDrawer(el.dataset.k),
+    "close-drawer": () => closeDrawer(),
+    scrim: (el, ev) => {
+      if (ev.target === el) closeDrawer();
+    },
+    move: (el) => move(findByKey(el.dataset.k), el.dataset.to),
+    expand: (el) => {
+      S.expanded.add(el.dataset.col);
+      S.focusAfter = `col:${el.dataset.col}`;
+      paint();
+    },
+    collapse: (el) => {
+      S.expanded.delete(el.dataset.col);
+      paint();
+    },
+    "reset-filters": () => resetFilters(),
+    copy: (el) => copyText(el.dataset.text, el.dataset.msg || "Đã copy"),
+    "copy-queue": () => copyText(S.queue.join("\n"), "Đã copy lệnh đồng bộ (mỗi lệnh một dòng)"),
+    "toast-close": () => {
+      clearTimeout(S.toastTimer);
+      $("#r-toast").innerHTML = "";
+    },
+    "sync-sprint": async () => {
+      const id = activeSprint();
+      const res = await send(API.sync, { sprintId: id }, `${CLI} sprint-sync --sprint=${cliQuote(id)}`);
+      if (res.ok) toast(`Đã đồng bộ vào board/sprints/${id}.md`);
+    },
+    "edit-member": (el) => {
+      const m = roster().find((r) => r.member === el.dataset.member);
+      if (!m) return;
+      S.draft.member = {
+        member: m.member,
+        name: m.name,
+        role: m.role,
+        capacitySp: String(m.capacitySp),
+        specialties: m.specialties,
+        status: m.status,
+        err: {},
+      };
+      S.focusAfter = "m:name";
+      paint();
+    },
+    "seed-team": async () => {
+      const existing = new Set(roster().map((m) => m.member.toLowerCase()));
+      const missing = DEFAULT_TEAM.filter((m) => !existing.has(m.member));
+      if (!missing.length) {
+        toast("Đã có đủ 4 role mẫu.");
+        return;
+      }
+      for (const m of missing) {
+        const res = await saveMember(m);
+        if (!res.ok) return;
+      }
+      toast(`Đã thêm ${missing.length} thành viên mẫu vào board/TEAM.md`);
+    },
+  };
+
+  /* ───────────────────────── edits & forms ───────────────────────── */
+  async function onEdit(el) {
+    const item = findWork(el.dataset.id);
+    const field = el.dataset.edit;
+    if (!item) {
+      paint();
+      return;
+    }
+    if (field === "status") {
+      await move(item, el.value);
+      return;
+    }
+    let value = el.value.trim();
+    if (field === "devSp" || field === "qaSp") {
+      const n = Number(value);
+      if (value === "" || !Number.isFinite(n) || n < 0) {
+        toast("Điểm SP phải là số ≥ 0.", "err");
+        paint();
+        return;
+      }
+      value = n;
+    } else if (field === "sprint") {
+      value = value.toUpperCase();
+      if (value !== "BACKLOG" && !SPRINT_ID_RE.test(value)) {
+        toast("Sprint chỉ gồm chữ, số, '-' hoặc '_' (vd SPRINT-02).", "err");
+        paint();
+        return;
+      }
+    }
+    if (value === item[field]) {
+      paint(); // value reverted to the saved one — flush anything deferred while typing
+      return;
+    }
+    await patch(item, { [field]: value });
+  }
+
+  function onDraft(el) {
+    const form = el.dataset.form;
+    const field = el.dataset.field;
+    const d = S.draft[form];
+    if (el.type === "checkbox") {
+      d[field] = el.checked ? uniq([...d[field], el.value]) : d[field].filter((v) => v !== el.value);
+    } else {
+      d[field] = el.value;
+      if (form === "retro" && field === "role") d.tags = [];
+    }
+    delete d.err[field];
+  }
+
+  function invalid(form, err) {
+    S.draft[form].err = err;
+    S.focusAfter = `${form === "member" ? "m" : "rt"}:${Object.keys(err)[0]}`;
+    paint();
+  }
+
+  const SUBMIT = {
+    member: async () => {
+      const d = S.draft.member;
+      const err = {};
+      const id = d.member.trim();
+      const cap = Number(d.capacitySp);
+      if (!MEMBER_ID_RE.test(id)) err.member = "Mã chỉ gồm chữ, số, '-' hoặc '_' (vd @dev-1).";
+      if (d.capacitySp === "" || !Number.isFinite(cap) || cap < 1 || cap > 100) {
+        err.capacitySp = "Capacity phải từ 1 đến 100 SP.";
+      }
+      if (Object.keys(err).length) {
+        invalid("member", err);
+        return;
+      }
+      const member = id.startsWith("@") ? id : `@${id}`;
+      const res = await saveMember({
+        member,
+        name: d.name.trim() || member.slice(1),
+        role: d.role,
+        capacitySp: cap,
+        specialties: d.specialties.trim() || "General",
+        status: d.status,
+      });
+      if (res.ok) {
+        S.draft.member = freshMemberDraft();
+        paint();
+        toast(`Đã lưu ${member} vào board/TEAM.md`);
+      }
+    },
+    retro: async () => {
+      const d = S.draft.retro;
+      const err = {};
+      const member = retroMember().trim();
+      if (!MEMBER_ID_RE.test(member)) err.member = "Nhập mã thành viên hợp lệ (vd @dev-1).";
+      if (!d.tags.length && !d.proposal.trim()) err.proposal = "Chọn ít nhất một điểm nghẽn hoặc nhập đề xuất.";
+      if (Object.keys(err).length) {
+        invalid("retro", err);
+        return;
+      }
+      const sprintId = activeSprint();
+      const role = retroRole();
+      const proposal = d.proposal.trim();
+      const res = await send(
+        API.retro,
+        { sprintId, member, role, bottleneckTags: d.tags, proposal },
+        `${CLI} retro-input --sprint=${cliQuote(sprintId)} --member=${cliQuote(member)} --role=${role} --tags=${cliQuote(d.tags.join(","))} --proposal=${cliQuote(proposal)}`
+      );
+      if (res.ok) {
+        d.tags = [];
+        d.proposal = "";
+        paint();
+        toast(`Đã ghi retro của ${member} vào board/sprints/${sprintId}.md`);
+      }
+    },
+  };
+
+  /* ───────────────────────── events ───────────────────────── */
+  function onChange(ev) {
+    const el = ev.target;
+    if (el.dataset.edit) {
+      S.typing = false;
+      onEdit(el);
+    } else if (el.dataset.form) {
+      onDraft(el);
+      if (el.hasAttribute("data-rerender")) paint();
+    } else if (el.dataset.pref) {
+      S.prefs[el.dataset.pref] = el.checked;
+      savePrefs();
+      paint();
+    } else if (el.dataset.filter === "member") {
+      setMember(el.value);
+    } else if (el.dataset.filter === "role") {
+      S.role = el.value;
+      send(API.active, { role: S.role }).then((res) => {
+        if (res.ok) toast(`Đang thao tác với vai trò ${S.role.toUpperCase()}`);
+      });
+    } else if (el.dataset.filter === "sprint") {
+      S.f.sprint = el.value;
+      paint();
+    } else if (el.dataset.filter === "type") {
+      S.f.type = el.value;
+      paint();
+    }
+  }
+
+  function onInput(ev) {
+    const el = ev.target;
+    if (el.dataset.filter === "q") {
+      S.f.q = el.value;
+      paintBody();
+    } else if (el.dataset.edit) {
+      S.typing = true;
+    } else if (el.dataset.form) {
+      onDraft(el);
+    }
+  }
+
+  function onFocusOut(ev) {
+    if (!ev.target.dataset || !ev.target.dataset.edit) return;
+    S.typing = false;
+    const to = ev.relatedTarget;
+    /* If focus moves to another control inside the app, a click/change is about to repaint anyway;
+       repainting here would swap the node under the pointer and swallow that click. */
+    if (S.deferred && !(to && $("#board-app").contains(to))) paint();
+  }
+
+  function dragClear() {
+    $$(".kcol.is-drop-ok, .kcol.is-drop-blocked").forEach((c) => {
+      c.classList.remove("is-drop-ok", "is-drop-blocked");
+      c.removeAttribute("data-hint");
+    });
+  }
+
+  function bindDrag(root) {
+    root.addEventListener("dragstart", (ev) => {
+      const card = ev.target.closest && ev.target.closest(".card[draggable=true]");
+      if (!card) return;
+      S.dragKey = card.dataset.k;
+      ev.dataTransfer.setData("text/plain", S.dragKey);
+      ev.dataTransfer.effectAllowed = "move";
+      card.classList.add("is-dragging");
+    });
+    root.addEventListener("dragover", (ev) => {
+      const col = ev.target.closest && ev.target.closest(".kcol");
+      const item = S.dragKey && findByKey(S.dragKey);
+      if (!col || !item) return;
+      ev.preventDefault();
+      const why = gate(item, col.dataset.col);
+      ev.dataTransfer.dropEffect = why ? "none" : "move";
+      dragClear();
+      col.classList.add(why ? "is-drop-blocked" : "is-drop-ok");
+      if (why) col.setAttribute("data-hint", why);
+    });
+    root.addEventListener("dragleave", (ev) => {
+      const col = ev.target.closest && ev.target.closest(".kcol");
+      if (col && !col.contains(ev.relatedTarget)) {
+        col.classList.remove("is-drop-ok", "is-drop-blocked");
+        col.removeAttribute("data-hint");
+      }
+    });
+    root.addEventListener("drop", (ev) => {
+      const col = ev.target.closest && ev.target.closest(".kcol");
+      const item = S.dragKey && findByKey(S.dragKey);
+      if (!col || !item) return;
+      ev.preventDefault();
+      dragClear();
+      S.dragKey = null;
+      move(item, col.dataset.col);
+    });
+    root.addEventListener("dragend", () => {
+      dragClear();
+      S.dragKey = null;
+      if (S.deferred) paint();
+    });
+  }
+
+  function onKeydown(ev) {
+    if (ev.key === "Escape" && S.sel) {
+      ev.preventDefault();
+      closeDrawer();
+      return;
+    }
+    const tag = document.activeElement ? document.activeElement.tagName : "";
+    if (ev.key === "/" && S.tab === "board" && !S.sel && !["INPUT", "TEXTAREA", "SELECT"].includes(tag)) {
+      const search = byFk("tb:q");
+      if (search) {
+        ev.preventDefault();
+        search.focus();
+      }
+    }
+  }
+
+  function bind(root) {
+    root.addEventListener("click", (ev) => {
+      const el = ev.target.closest("[data-act]");
+      if (el && root.contains(el)) ACT[el.dataset.act]?.(el, ev);
+    });
+    root.addEventListener("change", onChange);
+    root.addEventListener("input", onInput);
+    root.addEventListener("focusout", onFocusOut);
+    root.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      SUBMIT[ev.target.dataset.submit]?.();
+    });
+    bindDrag(root);
+    document.addEventListener("keydown", onKeydown);
+  }
+
+  /* ───────────────────────── boot ───────────────────────── */
+  async function boot() {
+    const root = $("#board-app");
+    if (!root) return;
+    loadPrefs();
+    try {
+      applyTheme(localStorage.getItem(THEME_KEY) || "auto");
+    } catch (_) {
+      applyTheme("auto");
+    }
+    root.innerHTML = `
+      <header class="topbar" id="r-top"></header>
+      <div id="r-banner"></div>
+      <div id="r-lists" hidden></div>
+      <main class="main" id="r-main"></main>
+      <div id="r-drawer"></div>
+      <div class="toasts" id="r-toast" role="status" aria-live="polite"></div>`;
+    bind(root);
+    if (S.live) S.conn = "connecting"; // until the event stream confirms
+    paint();
+    if (S.live) {
+      await fetchState();
+      paint();
+      connectEvents();
+    }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+
+  </script>
+</body>
+</html>

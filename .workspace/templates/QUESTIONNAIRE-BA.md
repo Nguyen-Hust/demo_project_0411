@@ -1,9 +1,0 @@
-# BA Questionnaire — <Feature>
-
-### Q-BA-001: <Question Title>
-- **[XUNG ĐỘT CODEBASE / SPEC]:** `file:line` vs `REQ-*`
-- **[TÁC ĐỘNG]:** ...
-- **[ĐỀ XUẤT KỸ THUẬT CHO BA CHỌN]:**
-  - Phương án A (Recommended): ...
-  - Phương án B: ...
-- **Quyết định của BA:**
