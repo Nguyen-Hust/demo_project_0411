@@ -1,0 +1,25 @@
+{
+  "suite": "SmartKMS Sprint 0 Seed",
+  "target": "web",
+  "baseUrl": "http://localhost:5160",
+  "cases": [
+    {
+      "id": "seed-home-render",
+      "title": "Trang tổng quan render đầy đủ",
+      "priority": "P0",
+      "steps": [
+        { "action": "Truy cập '/'", "oracle": "Page header hiển thị 'Tổng quan'" },
+        { "action": "Quan sát sidebar", "oracle": "Sidebar điều hướng hiển thị" },
+        { "action": "Quan sát nội dung", "oracle": "Empty state hiển thị (chưa có dữ liệu Sprint 1)" }
+      ]
+    },
+    {
+      "id": "seed-nav-links",
+      "title": "Sidebar chứa đủ các module",
+      "priority": "P0",
+      "steps": [
+        { "action": "Truy cập '/'", "oracle": "Đủ 5 nav link: Tổng quan, Trẻ em, Điểm danh, Dinh dưỡng, Nhân sự" }
+      ]
+    }
+  ]
+}

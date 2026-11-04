@@ -1,0 +1,34 @@
+@page "/"
+
+<PageHeader Title="Tổng quan" Subtitle="Bảng điều khiển quản lý trường mầm non" />
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4 d-flex flex-column gap-2" Elevation="0" data-testid="stat-children">
+            <MudText Typo="Typo.body2" Color="Color.Default">Tổng trẻ đang học</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary">--</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4 d-flex flex-column gap-2" Elevation="0" data-testid="stat-attendance">
+            <MudText Typo="Typo.body2" Color="Color.Default">Điểm danh hôm nay</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary">--</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4 d-flex flex-column gap-2" Elevation="0" data-testid="stat-meals">
+            <MudText Typo="Typo.body2" Color="Color.Default">Suất ăn đã chốt</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary">--</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4 d-flex flex-column gap-2" Elevation="0" data-testid="stat-pickups">
+            <MudText Typo="Typo.body2" Color="Color.Default">Trẻ đã bàn giao</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary">--</MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudPaper Class="pa-6 mt-6" Elevation="0">
+    <EmptyState Icon="@Icons.Material.Filled.Inbox" Message="Dữ liệu thực tế sẽ xuất hiện khi các module Children, Attendance, Nutrition được triển khai từ Sprint 1." />
+</MudPaper>

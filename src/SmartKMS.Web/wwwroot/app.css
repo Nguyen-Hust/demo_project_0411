@@ -1,0 +1,58 @@
+/* Design tokens GĐ1 — đồng bộ với docs/design-system/MASTER.md */
+:root {
+    --primary: #f97316;
+    --background: #fdf9f5;
+    --surface: #ffffff;
+    --text: #231c0d;
+    --text-muted: #8a7055;
+    --border: rgba(140, 100, 40, 0.12);
+    --radius: 14px;
+}
+
+html {
+    font-size: 15px;
+}
+
+body {
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+    background: var(--background);
+    color: var(--text);
+}
+
+h1, h2, h3, h4 {
+    font-family: "Nunito", sans-serif;
+}
+
+.appbar {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+}
+
+.appbar-title {
+    font-family: "Nunito", sans-serif;
+    font-weight: 600;
+}
+
+.navmenu .mud-nav-link-text {
+    font-weight: 500;
+}
+
+.page-header-title {
+    font-family: "Nunito", sans-serif;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1rem;
+}
+
+.empty-state-icon {
+    color: var(--text-muted);
+    opacity: 0.6;
+    width: 3rem;
+    height: 3rem;
+}

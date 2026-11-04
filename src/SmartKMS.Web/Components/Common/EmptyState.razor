@@ -1,0 +1,19 @@
+<div class="empty-state" data-testid="empty-state">
+    <MudIcon Icon="@Icon" Class="empty-state-icon" />
+    <MudText Typo="Typo.body1" Color="Color.Default">@Message</MudText>
+    @if (ActionContent is not null)
+    {
+        <div class="mt-4">@ActionContent</div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Icon { get; set; } = Icons.Material.Filled.Inbox;
+
+    [Parameter]
+    public string Message { get; set; } = "Không có dữ liệu";
+
+    [Parameter]
+    public RenderFragment? ActionContent { get; set; }
+}

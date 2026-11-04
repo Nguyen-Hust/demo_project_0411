@@ -1,0 +1,33 @@
+@typeparam TItem
+
+<MudDataGrid T="TItem" Items="@Items" Loading="@Loading" Filterable="true" Dense="@Dense" data-testid="data-table">
+    <ToolBarContent>
+        @ToolBar
+    </ToolBarContent>
+    <Columns>
+        @Columns
+    </Columns>
+    <NoRecordsContent>
+        <EmptyState Message="@EmptyMessage" />
+    </NoRecordsContent>
+</MudDataGrid>
+
+@code {
+    [Parameter]
+    public IEnumerable<TItem>? Items { get; set; }
+
+    [Parameter]
+    public bool Loading { get; set; }
+
+    [Parameter]
+    public bool Dense { get; set; }
+
+    [Parameter]
+    public string EmptyMessage { get; set; } = "Không có dữ liệu";
+
+    [Parameter]
+    public RenderFragment? ToolBar { get; set; }
+
+    [Parameter]
+    public RenderFragment? Columns { get; set; }
+}
