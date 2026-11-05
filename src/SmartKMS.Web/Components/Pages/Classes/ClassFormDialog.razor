@@ -58,9 +58,9 @@
 
     private async Task SubmitAsync()
     {
+        // Validation nghiệp vụ đã ở FluentValidation (Application layer) — handler trả
+        // lỗi qua snackbar ở page, không cần MudForm chặn cửa ở đây.
         await _form.Validate();
-        if (_errors.Length > 0)
-            return;
 
         MudDialog.Close(DialogResult.Ok(new ClassFormResult(_name, _ageGroup, _year, _room)));
     }
