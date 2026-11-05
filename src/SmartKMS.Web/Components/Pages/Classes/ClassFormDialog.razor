@@ -3,7 +3,7 @@
         <MudText Typo="Typo.h6">@(Data is null ? "Tạo lớp học" : "Sửa lớp học")</MudText>
     </TitleContent>
     <DialogContent>
-        <MudForm @ref="_form" @bind-Errors="_errors" @onsubmit="SubmitAsync">
+        <MudForm>
             <MudTextField @bind-Value="_name"
                           Label="Tên lớp"
                           Required="true"
@@ -27,7 +27,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton Color="Color.Default" Variant="Variant.Outlined" OnClick="Cancel" data-testid="class-dialog-cancel">Hủy</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync" data-testid="class-submit-button">Lưu</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" data-testid="class-submit-button">Lưu</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -38,8 +38,6 @@
     [Parameter]
     public ClassDetailDto? Data { get; set; }
 
-    private MudForm _form = default!;
-    private string[] _errors = [];
     private string _name = string.Empty;
     private AgeGroup _ageGroup = AgeGroup.La;
     private string _year = string.Empty;
@@ -56,12 +54,10 @@
         }
     }
 
-    private async Task SubmitAsync()
+    private void Submit()
     {
-        // Validation nghiệp vụ đã ở FluentValidation (Application layer) — handler trả
-        // lỗi qua snackbar ở page, không cần MudForm chặn cửa ở đây.
-        await _form.Validate();
-
+        // Validation nghiệp vụ ở FluentValidation (Application layer) — handler trả lỗi qua
+        // snackbar ở page. Không đụng MudForm _form (null-unsafe khi dialog render qua provider).
         MudDialog.Close(DialogResult.Ok(new ClassFormResult(_name, _ageGroup, _year, _room)));
     }
 

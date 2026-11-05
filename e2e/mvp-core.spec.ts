@@ -28,6 +28,8 @@ test.describe('Lớp học (Ticket 01) happy path', () => {
     // MudBlazor render popover select qua portal ở body, KHÔNG nằm trong dialog.
     await page.getByTestId('class-agegroup-select').click();
     await page.getByRole('listbox').getByRole('option', { name: 'Lá' }).click();
+    // MudBlazor 9 không tự collapse popover sau option click — đóng bằng click ra ngoài.
+    await page.getByRole('heading', { name: 'Tạo lớp học' }).click();
     await page.getByTestId('class-year-input').fill('2025-2026');
     await page.getByTestId('class-room-input').fill('Phòng 101');
     await page.getByTestId('class-submit-button').click();
