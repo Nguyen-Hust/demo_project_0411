@@ -151,3 +151,19 @@ Ephemeral: `powershell -ExecutionPolicy Bypass -File scripts/run-e2e-server.ps1 
   - Fails when: lớp biến mất khỏi dữ liệu (xóa cứng) hoặc lớp đóng vẫn nhận giáo viên/học sinh mới (điểm này chốt tại ticket 03/05).
 - [ ] [Regression] Given trang Home mặc định Sprint 0, When render, Then vẫn hiển thị không lỗi.
   - Fails when: ArchitectureTests hoặc build báo lỗi.
+
+## Handoff Summary
+
+Ticket 01 hoàn tất DEV, chuyển `READY_FOR_QA`. Bằng chứng (chạy fresh session này): unit/architecture 36 test pass (Domain 6 + Application 27 + Architecture 3), E2E headed `3 passed (12.7s)` — mvp-core happy path (tạo→lọc→xem→sửa→đóng, 9.7s) + seed 2/2. Root cause lỗi UI/E2E là `App.razor` thiếu CSS/JS MudBlazor (đã sửa, commit `8d52795`). Two-axis review: Standards CLEAR · Spec CLEAR.
+
+**Queued tasks từ `board/features/mvp-core/suggested-tasks.md` (không thuộc ticket này, chờ slice riêng):**
+
+| # | Nội dung |
+|---|---|
+| S-01 | `_Imports.razor:8` warning CS0105 (trùng using) — pre-existing |
+| S-02 | `DataTable<TItem>` wrapper không truyền generic context cho column typed (ticket dùng `MudDataGrid` trực tiếp) |
+| S-03 | Migration `InitialCreate` gộp cả bảng Identity + classes (đúng debt ledger, không cần tách ngay) |
+| S-04 | `StudentCount`/detail lists hard-code 0 — chờ ticket 05 (enrollment) + 03 (assignment) mở rộng query |
+| S-05 | Testcontainers Postgres 17 thay InMemory cho handler tests (đúng chuẩn ADR "không InMemory cho DB thật") |
+
+Cộng minors từ code-review: index `uq_classes_name_agegroup_year` lệch snake_case (`agegroup` vs `age_group`), `room` null-vs-empty dual representation, dùng `MudDataGrid` thay `DataTable<TItem>` wrapper, thiếu `IsClosed` seam cho guard ticket 03/05.
