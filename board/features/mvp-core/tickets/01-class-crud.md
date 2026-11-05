@@ -33,7 +33,7 @@
 - Evidence: `board/features/mvp-core/verification.md` — hàng Class CRUD.
 - UI flows: `e2e/mvp-core.spec.ts` — "tạo lớp & xem danh sách & đóng lớp".
 
-**Status:** IN_PROGRESS
+**Status:** READY_FOR_QA
 - Plan-Approved: true (approved by: user via interactive gate 2026-11-05)
 
 ## Technical Plan
